@@ -1,4 +1,4 @@
-# استوديو الصوت العربي
+# منطوق
 
 <!-- impeccable:product-schema 1 -->
 
@@ -28,7 +28,7 @@ The app runs in Streamlit, with a Python CLI. Users may enter their own API key 
 
 ## Brand Commitments
 
-Keep the name «استوديو الصوت العربي» and the bundled Thmanyah Arabic font. Use Arabic and RTL for the interface; keep API keys and voice IDs readable left-to-right.
+Keep the name «منطوق» and the bundled Thmanyah Arabic font. Use Arabic and RTL for the interface; keep API keys and voice IDs readable left-to-right.
 
 ## Evidence on Hand
 

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-09-25T00:00:00Z",
-  "title": "Design System: استوديو الصوت العربي",
+  "title": "Design System: منطوق",
   "extensions": {
     "shadows": [
       { "name": "sheet", "value": "0 16px 45px rgba(28, 53, 70, .08)", "purpose": "Separate the writing surface from the cool canvas." }

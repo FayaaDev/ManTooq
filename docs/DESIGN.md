@@ -1,5 +1,5 @@
 ---
-name: استوديو الصوت العربي
+name: منطوق
 description: Arabic-first local voice workbench
 colors:
   accent: "#2254b4"
@@ -22,7 +22,7 @@ rounded:
   sheet: "12px"
 ---
 
-# Design System: استوديو الصوت العربي
+# Design System: منطوق
 
 ## Overview
 

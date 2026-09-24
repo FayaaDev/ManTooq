@@ -22,7 +22,7 @@ if __name__ == "__main__" and not streamlit_runtime_exists():
 
 
 load_dotenv()
-st.set_page_config(page_title="استوديو الصوت العربي", page_icon="🎙️", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="منطوق", page_icon="🎙️", layout="wide", initial_sidebar_state="collapsed")
 font = base64.b64encode((Path(__file__).resolve().parent / "font" / "thmanyahsans-Bold.ttf").read_bytes()).decode()
 st.markdown(
     f"""<style>
@@ -58,7 +58,7 @@ st.markdown(
 )
 header, connection = st.columns([3, 1], gap="medium", vertical_alignment="center")
 with header:
-    st.title("استوديو الصوت العربي", text_alignment="right")
+    st.title("منطوق", text_alignment="right")
 with connection:
     with st.popover("مفتاح API", icon=":material/key:"):
         entered_api_key = st.text_input(

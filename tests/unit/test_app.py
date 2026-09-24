@@ -16,7 +16,7 @@ class AppStateTest(unittest.TestCase):
         ), patch.object(arabic_tts, "VOICE_FILE", Path(folder) / "voice_id"):
             at = AppTest.from_file(str(Path(__file__).resolve().parents[2] / "app" / "app.py")).run()
             self.assertFalse(at.exception)
-            self.assertEqual(at.title[0].value, "استوديو الصوت العربي")
+            self.assertEqual(at.title[0].value, "منطوق")
             self.assertEqual(len(at.get("audio")), 0)
             self.assertEqual(len(at.get("download_button")), 0)
 

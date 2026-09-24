@@ -50,8 +50,8 @@ class BrowserCycleTest(unittest.TestCase):
                     try:
                         page = browser.new_page(accept_downloads=True)
                         page.goto(f"http://127.0.0.1:{port}")
-                        page.get_by_role("heading", name="استوديو الصوت العربي").wait_for()
-                        for name in ("استوديو الصوت العربي", "نصك، بصوتك", "الاستماع"):
+                        page.get_by_role("heading", name="منطوق").wait_for()
+                        for name in ("منطوق", "نصك، بصوتك", "الاستماع"):
                             heading = page.get_by_role("heading", name=name)
                             self.assertEqual(heading.evaluate("element => getComputedStyle(element).textAlign"), "right")
                         self.assertEqual(page.get_by_text("سيظهر التسجيل هنا بعد التوليد.").evaluate("element => getComputedStyle(element).textAlign"), "right")
