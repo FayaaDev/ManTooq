@@ -51,11 +51,16 @@ class BrowserCycleTest(unittest.TestCase):
                         page = browser.new_page(accept_downloads=True)
                         page.goto(f"http://127.0.0.1:{port}")
                         page.get_by_role("heading", name="استوديو الصوت العربي").wait_for()
+                        for name in ("استوديو الصوت العربي", "نصك، بصوتك", "الاستماع"):
+                            heading = page.get_by_role("heading", name=name)
+                            self.assertEqual(heading.evaluate("element => getComputedStyle(element).textAlign"), "right")
+                        self.assertEqual(page.get_by_text("سيظهر التسجيل هنا بعد التوليد.").evaluate("element => getComputedStyle(element).textAlign"), "right")
                         page.get_by_role("textbox", name="معرّف الصوت").fill("library-e2e-id")
                         page.get_by_role("textbox", name="النص العربي").fill("نص تجريبي")
                         page.get_by_role("button", name="ولّد الصوت").click()
                         page.get_by_text("أدخل مفتاح ElevenLabs API.").wait_for()
                         self.assertFalse(events.exists())
+                        page.get_by_role("button", name="مفتاح API").click()
                         page.get_by_role("textbox", name="مفتاح API").fill("test-key")
                         page.get_by_role("tab", name="استنساخ صوت").click()
                         page.get_by_role("button", name="استنسخ الصوت").click()
@@ -72,6 +77,12 @@ class BrowserCycleTest(unittest.TestCase):
                         self.assertEqual((folder / ".local" / "voice_id").read_text().strip(), "cloned-e2e-id")
 
                         page.get_by_role("tab", name="توليد الصوت").click()
+                        page.get_by_role("button", name="إعدادات النبرة").click()
+                        page.get_by_role("spinbutton", name="البذرة").wait_for()
+                        page.get_by_role("button", name="بذرة جديدة").click()
+                        generated_seed = int(page.get_by_role("spinbutton", name="البذرة").input_value())
+                        self.assertIn(generated_seed, json.loads((folder / ".local" / "seeds.json").read_text()))
+                        page.keyboard.press("Escape")
                         page.get_by_role("button", name="ولّد الصوت").click()
                         page.get_by_text("أدخل النص المراد تحويله إلى صوت.").wait_for()
                         self.assertTrue(page.get_by_text("أدخل النص المراد تحويله إلى صوت.").is_visible())
@@ -97,11 +108,20 @@ class BrowserCycleTest(unittest.TestCase):
                         page.get_by_role("button", name="ولّد الصوت").click()
                         page.get_by_text("تعذّر توليد الصوت.", exact=False).wait_for()
                         self.assertEqual(page.get_by_role("button", name="حمّل ملف MP3").count(), 0)
+                        page.get_by_role("tab", name="الأصوات المحفوظة").click()
+                        page.get_by_text("تسجيل 2").wait_for()
+                        self.assertEqual(page.locator("audio").count(), 2)
+                        page.get_by_role("button", name="معلومات").first.click()
+                        page.get_by_text(str(generated_seed), exact=True).wait_for()
+                        page.reload()
+                        page.get_by_role("tab", name="الأصوات المحفوظة").click()
+                        page.get_by_text("تسجيل 2").wait_for()
+                        self.assertEqual(len(list((folder / ".local" / "generated_audio").glob("*.mp3"))), 2)
                         self.assertEqual([json.loads(line) for line in events.read_text().splitlines()], [
                             {"action": "clone", "name": "صوت تجريبي", "filename": "sample.wav", "has_key": True},
-                            {"action": "speak", "text": "مرحبًا بالعالم", "voice_id": "cloned-e2e-id", "has_key": True},
-                            {"action": "speak", "text": "نص من المكتبة", "voice_id": "library-e2e-id", "has_key": True},
-                            {"action": "speak", "text": "E2E_FAIL", "voice_id": "library-e2e-id", "has_key": True},
+                            {"action": "speak", "text": "مرحبًا بالعالم", "voice_id": "cloned-e2e-id", "seed": generated_seed, "has_key": True},
+                            {"action": "speak", "text": "نص من المكتبة", "voice_id": "library-e2e-id", "seed": generated_seed, "has_key": True},
+                            {"action": "speak", "text": "E2E_FAIL", "voice_id": "library-e2e-id", "seed": generated_seed, "has_key": True},
                         ])
                     finally:
                         browser.close()

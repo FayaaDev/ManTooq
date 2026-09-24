@@ -11,6 +11,8 @@ from app import arabic_tts
 
 arabic_tts.VOICE_FILE = Path(os.environ["E2E_VOICE_FILE"])
 arabic_tts.ROOT = arabic_tts.VOICE_FILE.parent.parent
+arabic_tts.SEED_FILE = arabic_tts.VOICE_FILE.parent / "seeds.json"
+arabic_tts.GENERATED_AUDIO_DIR = arabic_tts.VOICE_FILE.parent / "generated_audio"
 
 
 def record(event):
@@ -29,7 +31,7 @@ class FakeElevenLabs:
         return SimpleNamespace(voice_id="cloned-e2e-id")
 
     def convert(self, *, text, voice_id, **kwargs):
-        record({"action": "speak", "text": text, "voice_id": voice_id, "has_key": self.has_key})
+        record({"action": "speak", "text": text, "voice_id": voice_id, "seed": kwargs["seed"], "has_key": self.has_key})
         if text == "E2E_FAIL":
             raise RuntimeError("Fake API failure")
         return [b"ID3\x04\x00\x00\x00\x00\x00\x00"]

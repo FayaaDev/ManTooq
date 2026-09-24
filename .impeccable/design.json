@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T00:00:00Z",
+  "title": "Design System: استوديو الصوت العربي",
+  "extensions": {
+    "shadows": [
+      { "name": "sheet", "value": "0 16px 45px rgba(28, 53, 70, .08)", "purpose": "Separate the writing surface from the cool canvas." }
+    ],
+    "breakpoints": [
+      { "name": "compact", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Studio sheet",
+      "kind": "card",
+      "description": "The single writing and playback surface.",
+      "html": "<div class=\"ds-sheet\">نصك، بصوتك</div>",
+      "css": ".ds-sheet { background: #fff; color: #172c3a; border-radius: 12px; padding: 2rem; box-shadow: 0 16px 45px rgba(28, 53, 70, .08); font-weight: 700; }"
+    },
+    {
+      "name": "Writing area",
+      "kind": "input",
+      "description": "Tall Arabic text input inside the studio sheet.",
+      "html": "<textarea class=\"ds-editor\" dir=\"rtl\" aria-label=\"النص العربي\" placeholder=\"اكتب النص الذي تريد سماعه…\"></textarea>",
+      "css": ".ds-editor { background: #f7f9fa; color: #172c3a; border: 1px solid #dce5ea; padding: 1rem; min-height: 240px; width: 100%; font-size: 1.25rem; line-height: 1.9; } .ds-editor:focus-visible { outline: 2px solid #2254b4; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Arabic type studio",
+    "overview": "A cool, quiet writing space puts Arabic text at the center of voice generation. The writing sheet separates the task from the surrounding canvas; the playback area belongs to the same surface. Controls stay familiar and secondary settings recede into popovers.",
+    "keyCharacteristics": ["One writing sheet", "Arabic-first typography", "On-demand secondary controls"],
+    "rules": [],
+    "dos": ["Do preserve Arabic RTL and the Thmanyah font throughout the workspace.", "Do keep generation, listening, and downloading within one visible task surface."],
+    "donts": ["Don't spread seed controls or explanatory paragraphs across the main workflow."]
+  }
+}

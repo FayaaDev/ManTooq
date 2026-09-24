@@ -1,15 +1,8 @@
-"""Local Streamlit interface for Arabic speech and voice cloning.
-
-THESIS: A focused RTL voice workbench, not a dashboard.
-OWN-WORLD: Thmanyah lettering, pale neutral canvas, ink controls, one quiet result surface.
-STORY: Supply a key, choose a voice, write Arabic, listen and download; cloning is adjacent.
-FIRST VIEWPORT: Title and connection at top, workflow tabs below, editor beside the result.
-FORM: Direct shadcn V2 actions alongside native Streamlit audio and upload controls.
-FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and docs/DESIGN.md.
-"""
+"""Local Streamlit interface for Arabic speech and voice cloning."""
 
 import base64
 import os
+import secrets
 import sys
 from pathlib import Path
 
@@ -19,9 +12,9 @@ from dotenv import load_dotenv
 from streamlit.runtime import exists as streamlit_runtime_exists
 
 if Path(sys.path[0]).resolve() == Path(__file__).resolve().parent:
-    from arabic_tts import clone_voice, default_voice_id, speak
+    from arabic_tts import DEFAULT_SEED, clone_voice, default_voice_id, save_generated_audio, save_seed, saved_generated_audio, saved_seeds, speak
 else:
-    from app.arabic_tts import clone_voice, default_voice_id, speak
+    from app.arabic_tts import DEFAULT_SEED, clone_voice, default_voice_id, save_generated_audio, save_seed, saved_generated_audio, saved_seeds, speak
 
 
 if __name__ == "__main__" and not streamlit_runtime_exists():
@@ -34,78 +27,106 @@ font = base64.b64encode((Path(__file__).resolve().parent / "font" / "thmanyahsan
 st.markdown(
     f"""<style>
     @font-face {{ font-family: Thmanyah; src: url(data:font/ttf;base64,{font}) format('truetype'); font-weight: 700; }}
-    .stApp {{ direction: rtl; text-align: right; background: #f7f8f7; color: #1c292d; }}
+    .stApp {{ direction: rtl; text-align: right; background: #eaf0f3; color: #172c3a; }}
     .stApp, .stApp *:not([data-testid="stIconMaterial"]) {{ font-family: Thmanyah, sans-serif !important; }}
     [data-ssui-v2-host] {{ direction: rtl !important; }}
-    [data-testid="stMainBlockContainer"] {{ max-width: 1120px; padding-top: 2.5rem; }}
-    h1 {{ font-size: 2.2rem !important; line-height: 1.4 !important; }}
-    h2 {{ font-size: 1.4rem !important; }}
-    .stApp a {{ text-underline-offset: 3px; }}
+    [data-testid="stMainBlockContainer"] {{ max-width: 1200px; padding-top: 1.5rem; }}
+    [data-testid="stMainBlockContainer"] > div > div {{ gap: 1rem; }}
+    h1 {{ font-size: 1.65rem !important; line-height: 1.45 !important; letter-spacing: -.02em; }}
+    h2, h3 {{ font-size: 1.2rem !important; }}
+    .stApp a {{ text-underline-offset: 3px; color: #2254b4; }}
+    .stApp ::selection {{ background: #bdd2f5; color: #142b3a; }}
+    .stApp :focus-visible {{ outline-color: #2254b4; }}
     .stApp input[type=password], .stApp input[aria-label="معرّف الصوت"] {{ direction: ltr; text-align: left; }}
-    @media (max-width: 640px) {{ [data-testid="stMainBlockContainer"] {{ padding: 1.25rem 1rem; }} }}
+    .st-key-studio_sheet {{ background: #fff; border: 0; border-radius: 12px; padding: 2rem !important; box-shadow: 0 16px 45px rgba(28, 53, 70, .08); }}
+    .st-key-studio_sheet [data-testid="stVerticalBlock"] {{ gap: .85rem; }}
+    .st-key-studio_sheet textarea {{ font-size: 1.25rem; line-height: 1.9; background: #f7f9fa; border-color: #dce5ea; }}
+    .st-key-studio_sheet textarea::placeholder {{ color: #536977; }}
+    .st-key-playback {{ border-inline-start: 1px solid #dce5ea; padding-inline-start: 1.75rem; min-height: 390px; }}
+    .st-key-playback [data-testid="stAudio"] {{ margin-top: 1.5rem; }}
+    @media (max-width: 640px) {{
+      [data-testid="stMainBlockContainer"] {{ padding: 1rem; }}
+      .st-key-studio_sheet {{ padding: 1.25rem !important; }}
+      .st-key-studio_sheet textarea {{ min-height: 210px; }}
+      .st-key-playback {{ border-inline-start: 0; border-top: 1px solid #dce5ea; padding-inline-start: 0; padding-top: 1.25rem; min-height: 0; }}
+    }}
     </style>""",
     unsafe_allow_html=True,
 )
-header, connection = st.columns([3, 2], gap="large", vertical_alignment="top")
+header, connection = st.columns([3, 1], gap="medium", vertical_alignment="center")
 with header:
-    st.title("استوديو الصوت العربي")
-    st.caption("حوّل نصك إلى صوت عربي، بصوتك المستنسخ أو بصوت من المكتبة.")
+    st.title("استوديو الصوت العربي", text_alignment="right")
 with connection:
-    with st.expander("مفتاح ElevenLabs API", expanded=not os.getenv("ELEVENLABS_API_KEY")):
+    with st.popover("مفتاح API", icon=":material/key:"):
         entered_api_key = st.text_input(
             "مفتاح API",
             type="password",
-            help="يمكنك إدخال المفتاح هنا أو إضافته إلى ملف .env على جهازك.",
+            help="أدخل مفتاح ElevenLabs أو أضفه إلى .env على جهازك.",
         )
 api_key = entered_api_key or os.getenv("ELEVENLABS_API_KEY", "")
 
 if not api_key:
-    ui.alert("أدخل مفتاح API للبدء", "افتح إعداد المفتاح أعلاه وأدخل مفتاح ElevenLabs الخاص بك.")
+    ui.alert("مفتاح API مطلوب", "أضف مفتاح ElevenLabs من الزر أعلاه قبل التوليد.")
 
-active_tab = ui.tabs(["توليد الصوت", "استنساخ صوت"], key="workspace_tabs", label="سير العمل")
+active_tab = ui.tabs(["توليد الصوت", "استنساخ صوت", "الأصوات المحفوظة"], key="workspace_tabs", label="سير العمل")
 
 if active_tab == "توليد الصوت":
     saved_voice = default_voice_id()
-    editor, result = st.columns([3, 2], gap="large", vertical_alignment="top")
-    with editor:
-        st.subheader("اكتب ما تريد سماعه")
-        voice_source = ui.radio_group(
-            "الصوت",
-            ["صوتي المستنسخ", "صوت من المكتبة"],
-            index=0 if saved_voice else 1,
-            key="voice_source",
-        )
-        if voice_source == "صوتي المستنسخ":
-            voice_id = saved_voice
-            if not saved_voice:
-                ui.alert("لا يوجد صوت محفوظ", "استنسخ صوتًا أولًا، أو اختر صوتًا من المكتبة.")
-        else:
-            st.caption("اختر صوتًا من [مكتبة ElevenLabs](https://elevenlabs.io/app/voice-library)، ثم الصق معرّفه.")
-            voice_id = st.text_input("معرّف الصوت", placeholder="الصق معرّف الصوت من المكتبة")
+    st.session_state.setdefault("speech_seed", DEFAULT_SEED)
 
-        text = ui.textarea("النص العربي", placeholder="هلا والله، وش الأخبار؟", rows=7, key="speech_text")
-        generate = ui.button("ولّد الصوت", key="generate", width="stretch")
-        if generate:
-            st.session_state.pop("audio", None)
-            try:
-                with st.spinner("جارٍ توليد الصوت…"):
-                    st.session_state.audio = speak(text, voice_id, api_key)
-            except ValueError as exc:
-                st.warning(str(exc))
-            except Exception:
-                st.error("تعذّر توليد الصوت. تحقق من اتصالك بالإنترنت ومفتاح API ومعرّف الصوت، ثم أعد المحاولة.")
+    def use_saved_seed():
+        st.session_state.speech_seed = int(st.session_state.saved_seed)
 
-    with result:
-        st.subheader("النتيجة")
-        if st.session_state.get("audio"):
-            st.audio(st.session_state.audio, format="audio/mp3")
-            st.download_button("حمّل ملف MP3", st.session_state.audio, "speech.mp3", "audio/mpeg", use_container_width=True)
-        else:
-            ui.card("صوتك هنا", "اكتب نصًا واختر صوتًا، ثم اضغط «ولّد الصوت» للاستماع إلى النتيجة.")
+    with st.container(key="studio_sheet"):
+        editor, result = st.columns([3, 2], gap="large", vertical_alignment="top")
+        with editor:
+            st.subheader("نصك، بصوتك", text_alignment="right")
+            text = st.text_area("النص العربي", placeholder="اكتب النص الذي تريد سماعه…", height=240, key="speech_text")
+            voice_source = ui.radio_group(
+                "الصوت",
+                ["صوتي المستنسخ", "صوت من المكتبة"],
+                index=0 if saved_voice else 1,
+                key="voice_source",
+            )
+            if voice_source == "صوتي المستنسخ":
+                voice_id = saved_voice
+                if not saved_voice:
+                    ui.alert("لا يوجد صوت محفوظ", "استنسخ صوتًا أولًا، أو اختر صوتًا من المكتبة.")
+            else:
+                voice_id = st.text_input("معرّف الصوت", placeholder="معرّف الصوت من مكتبة ElevenLabs")
 
-else:
-    st.subheader("استنسخ صوتك")
-    st.caption("ارفع تسجيلًا لصوت تملك حق استنساخه. سيُستخدم حسابك في ElevenLabs لإنشاء الصوت.")
+            with st.popover("إعدادات النبرة", icon=":material/tune:"):
+                st.number_input("البذرة", min_value=0, max_value=2**32 - 1, step=1, key="speech_seed")
+                if ui.button("بذرة جديدة", key="generate_seed", variant="ghost"):
+                    st.session_state.speech_seed = secrets.randbits(32)
+                    save_seed(st.session_state.speech_seed)
+                st.selectbox("البذور المحفوظة", saved_seeds(), key="saved_seed", on_change=use_saved_seed)
+            generate = ui.button("ولّد الصوت", key="generate", width="stretch")
+            if generate:
+                st.session_state.pop("audio", None)
+                try:
+                    with st.spinner("جارٍ توليد الصوت…"):
+                        seed = int(st.session_state.speech_seed)
+                        save_seed(seed)
+                        st.session_state.audio = speak(text, voice_id, api_key, seed)
+                        save_generated_audio(st.session_state.audio, seed)
+                except ValueError as exc:
+                    st.warning(str(exc))
+                except Exception:
+                    st.error("تعذّر توليد الصوت. تحقق من اتصالك بالإنترنت ومفتاح API ومعرّف الصوت، ثم أعد المحاولة.")
+
+        with result:
+            with st.container(key="playback"):
+                st.subheader("الاستماع", text_alignment="right")
+                if st.session_state.get("audio"):
+                    st.audio(st.session_state.audio, format="audio/mp3")
+                    st.download_button("حمّل ملف MP3", st.session_state.audio, "speech.mp3", "audio/mpeg", width="stretch")
+                else:
+                    st.caption("سيظهر التسجيل هنا بعد التوليد.", text_alignment="right")
+
+elif active_tab == "استنساخ صوت":
+    st.subheader("استنسخ صوتك", text_alignment="right")
+    st.caption("ارفع تسجيلًا لصوت تملك حق استنساخه.", text_alignment="right")
     clone_form, clone_help = st.columns([3, 2], gap="large", vertical_alignment="top")
     with clone_form:
         sample = st.file_uploader("التسجيل الصوتي", type=["wav", "mp3", "m4a"])
@@ -121,4 +142,21 @@ else:
             except Exception:
                 st.error("تعذّر استنساخ الصوت. تحقق من اتصالك بالإنترنت ومفتاح API والتسجيل، ثم أعد المحاولة.")
     with clone_help:
-        ui.card("بعد الاستنساخ", "سيُحفظ الصوت على هذا الجهاز، ويمكنك اختياره من تبويب «توليد الصوت».")
+        st.caption("يُحفظ الصوت على هذا الجهاز ويظهر في تبويب «توليد الصوت».", text_alignment="right")
+
+else:
+    st.subheader("الأصوات المحفوظة", text_alignment="right")
+    recordings = saved_generated_audio()
+    if not recordings:
+        st.caption("ستظهر تسجيلاتك هنا بعد التوليد.", text_alignment="right")
+    for index, (path, seed) in enumerate(recordings, 1):
+        with st.container(border=True):
+            title, details = st.columns([4, 1], vertical_alignment="center")
+            with title:
+                st.markdown(f"**تسجيل {index}**", text_alignment="right")
+            with details:
+                with st.popover("معلومات", icon=":material/info:"):
+                    st.caption("رقم البذرة", text_alignment="right")
+                    st.code(str(seed))
+            st.audio(path, format="audio/mp3")
+            st.download_button("حمّل ملف MP3", path.read_bytes(), path.name, "audio/mpeg", key=path.name)
