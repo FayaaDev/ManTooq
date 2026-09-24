@@ -1,0 +1,25 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Local credentials, voice IDs, recordings, and generated output
+.env
+.local/
+cloned_voice_id*.txt
+Mp3/
+output/
+*.mp3
+*.wav
+*.m4a
+.DS_Store
+
+# Local agent tooling
+.agents/
+skills-lock.json

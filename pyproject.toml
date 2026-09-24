@@ -1,0 +1,17 @@
+[project]
+name = "arabic-elevenlabs-tts"
+version = "0.1.0"
+description = "Arabic text-to-speech and voice cloning with ElevenLabs"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "elevenlabs>=2.68.0",
+    "python-dotenv>=1.2.3",
+    "streamlit>=1.60.0",
+    "streamlit-shadcn-ui>=1.4.0,<2",
+]
+
+[dependency-groups]
+dev = [
+    "playwright>=1.63.0",
+]
