@@ -44,11 +44,14 @@ st.markdown(
     .st-key-studio_sheet textarea::placeholder {{ color: #536977; }}
     .st-key-playback {{ border-inline-start: 1px solid #dce5ea; padding-inline-start: 1.75rem; min-height: 390px; }}
     .st-key-playback [data-testid="stAudio"] {{ margin-top: 1.5rem; }}
+    .st-key-clone_guidance {{ border-inline-start: 1px solid #dce5ea; padding-inline-start: 1.75rem; min-height: 240px; }}
+    .st-key-studio_sheet [data-testid="stCode"] {{ direction: ltr; text-align: left; }}
     @media (max-width: 640px) {{
       [data-testid="stMainBlockContainer"] {{ padding: 1rem; }}
       .st-key-studio_sheet {{ padding: 1.25rem !important; }}
       .st-key-studio_sheet textarea {{ min-height: 210px; }}
       .st-key-playback {{ border-inline-start: 0; border-top: 1px solid #dce5ea; padding-inline-start: 0; padding-top: 1.25rem; min-height: 0; }}
+      .st-key-clone_guidance {{ border-inline-start: 0; border-top: 1px solid #dce5ea; padding-inline-start: 0; padding-top: 1.25rem; min-height: 0; }}
     }}
     </style>""",
     unsafe_allow_html=True,
@@ -125,24 +128,27 @@ if active_tab == "توليد الصوت":
                     st.caption("سيظهر التسجيل هنا بعد التوليد.", text_alignment="right")
 
 elif active_tab == "استنساخ صوت":
-    st.subheader("استنسخ صوتك", text_alignment="right")
-    st.caption("ارفع تسجيلًا لصوت تملك حق استنساخه.", text_alignment="right")
-    clone_form, clone_help = st.columns([3, 2], gap="large", vertical_alignment="top")
-    with clone_form:
-        sample = st.file_uploader("التسجيل الصوتي", type=["wav", "mp3", "m4a"])
-        name = ui.input("اسم الصوت", placeholder="صوتي العربي", key="clone_name")
-        create = ui.button("استنسخ الصوت", key="clone", width="stretch")
-        if create:
-            try:
-                with st.spinner("جارٍ استنساخ الصوت…"):
-                    voice_id = clone_voice(sample.getvalue() if sample else b"", sample.name if sample else "", name, api_key)
-                st.success(f"استنسخت صوتك وحفظته للاستخدام تلقائيًا. معرّف الصوت: {voice_id}")
-            except ValueError as exc:
-                st.warning(str(exc))
-            except Exception:
-                st.error("تعذّر استنساخ الصوت. تحقق من اتصالك بالإنترنت ومفتاح API والتسجيل، ثم أعد المحاولة.")
-    with clone_help:
-        st.caption("يُحفظ الصوت على هذا الجهاز ويظهر في تبويب «توليد الصوت».", text_alignment="right")
+    with st.container(key="studio_sheet"):
+        clone_form, clone_help = st.columns([3, 2], gap="large", vertical_alignment="top")
+        with clone_form:
+            st.subheader("استنسخ صوتك", text_alignment="right")
+            st.caption("ارفع تسجيلًا لصوت تملك حق استنساخه.", text_alignment="right")
+            sample = st.file_uploader("التسجيل الصوتي", type=["wav", "mp3", "m4a"])
+            name = ui.input("اسم الصوت", placeholder="صوتي العربي", key="clone_name")
+            create = ui.button("استنسخ الصوت", key="clone", width="stretch")
+            if create:
+                try:
+                    with st.spinner("جارٍ استنساخ الصوت…"):
+                        voice_id = clone_voice(sample.getvalue() if sample else b"", sample.name if sample else "", name, api_key)
+                    st.success("استنسخت صوتك وحفظته للاستخدام تلقائيًا.")
+                    st.code(voice_id)
+                except ValueError as exc:
+                    st.warning(str(exc))
+                except Exception:
+                    st.error("تعذّر استنساخ الصوت. تحقق من اتصالك بالإنترنت ومفتاح API والتسجيل، ثم أعد المحاولة.")
+        with clone_help:
+            with st.container(key="clone_guidance"):
+                st.caption("يُحفظ الصوت على هذا الجهاز ويظهر في تبويب «توليد الصوت».", text_alignment="right")
 
 else:
     st.subheader("الأصوات المحفوظة", text_alignment="right")
@@ -155,8 +161,8 @@ else:
             with title:
                 st.markdown(f"**تسجيل {index}**", text_alignment="right")
             with details:
-                with st.popover("معلومات", icon=":material/info:"):
-                    st.caption("رقم البذرة", text_alignment="right")
-                    st.code(str(seed))
+                with ui.elements(key=f"seed_tip_{index}", width="content") as elements:
+                    with elements.tooltip(f"رقم البذرة: {seed}"):
+                        elements.button("البذرة", key=f"seed_{index}", variant="ghost", size="sm")
             st.audio(path, format="audio/mp3")
             st.download_button("حمّل ملف MP3", path.read_bytes(), path.name, "audio/mpeg", key=path.name)
