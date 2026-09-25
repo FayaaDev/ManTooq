@@ -208,3 +208,23 @@ with st.container(key="footer"):
         st.html(f'''<a class="tiktok-link" href="https://www.tiktok.com/@manfathtech" target="_blank" rel="noopener noreferrer" aria-label="تيك توك — منفذ"><img src="data:image/svg+xml;base64,{tiktok_icon}" alt=""></a>''')
     with copyright:
         st.caption(f"© {datetime.now().year} منطوق. جميع الحقوق محفوظة.", text_alignment="right")
+
+st.html("""<script>
+if (!window.mantooqAlertRtl) {
+  const alignAlerts = () => {
+    document.querySelectorAll('[data-ssui-v2-host]').forEach(host => {
+      const root = host.shadowRoot;
+      if (root && !root.querySelector('style[data-alert-rtl]')) {
+        const style = document.createElement('style');
+        style.dataset.alertRtl = '';
+        style.textContent = '[data-slot="alert"] { text-align: start !important; }';
+        root.append(style);
+      }
+    });
+  };
+  window.mantooqAlertRtl = new MutationObserver(alignAlerts);
+  window.mantooqAlertRtl.observe(document.body, { childList: true, subtree: true });
+  alignAlerts();
+  setTimeout(alignAlerts, 500);
+}
+</script>""", unsafe_allow_javascript=True)
