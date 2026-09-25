@@ -1,20 +1,16 @@
-"""Draw the bundled app icon without storing generated binary files in git."""
+"""Generate bundled app icons from the shared logo."""
 
 import subprocess
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 
 icons = Path(__file__).resolve().parent.parent / "src-tauri" / "icons"
 icons.mkdir(parents=True, exist_ok=True)
-image = Image.new("RGBA", (1024, 1024), "#2254b4")
-draw = ImageDraw.Draw(image)
-draw.rounded_rectangle((405, 220, 619, 615), radius=105, fill="white")
-draw.arc((320, 345, 704, 765), 0, 180, fill="white", width=50)
-draw.line((512, 760, 512, 850), fill="white", width=50)
-draw.line((410, 850, 614, 850), fill="white", width=45)
+image = Image.open(Path(__file__).resolve().parent.parent / "app" / "font" / "logobg.png").convert("RGBA")
+image = image.resize((1024, 1024), Image.Resampling.LANCZOS)
 image.save(icons / "icon.png")
 image.save(icons / "icon.ico", sizes=[(16, 16), (32, 32), (48, 48), (256, 256)])
 iconset = icons / "icon.iconset"

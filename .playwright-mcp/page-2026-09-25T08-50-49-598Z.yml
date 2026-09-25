@@ -36,9 +36,9 @@
           - group [ref=e75]:
             - radiogroup "الصوت" [ref=e77]:
               - generic [ref=e78]:
-                - radio "صوتي المستنسخ" [checked] [ref=e79]
+                - radio "صوتي" [checked] [ref=e79]
                 - radio [checked] [aria-hidden] [ref=e82]
-                - generic [ref=e83]: صوتي المستنسخ
+                - generic [ref=e83]: صوتي
               - generic [ref=e84]:
                 - radio "صوت من المكتبة" [ref=e85]
                 - radio [aria-hidden] [ref=e86]

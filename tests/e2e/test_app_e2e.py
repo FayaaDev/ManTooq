@@ -10,7 +10,7 @@ import urllib.request
 import wave
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -28,7 +28,7 @@ class BrowserCycleTest(unittest.TestCase):
             with socket.socket() as address:
                 address.bind(("127.0.0.1", 0))
                 port = address.getsockname()[1]
-            env = dict(os.environ, ELEVENLABS_API_KEY="", E2E_VOICE_FILE=str(folder / ".local" / "voice_id"), E2E_EVENTS_FILE=str(events))
+            env = dict(os.environ, ELEVENLABS_API_KEY="env-test-key", E2E_VOICE_FILE=str(folder / ".local" / "voice_id"), E2E_EVENTS_FILE=str(events))
             server = subprocess.Popen(
                 [sys.executable, "-m", "streamlit", "run", "tests/e2e/e2e_app.py", "--server.headless=true", f"--server.port={port}", "--server.address=127.0.0.1", "--browser.gatherUsageStats=false"],
                 cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
@@ -59,6 +59,14 @@ class BrowserCycleTest(unittest.TestCase):
                         self.assertEqual(page.get_by_text("شيّك هنا بعد توليد الصوت").evaluate("element => getComputedStyle(element).textAlign"), "right")
                         page.get_by_role("textbox", name="معرّف الصوت").fill("library-e2e-id")
                         page.get_by_role("textbox", name="النص العربي").fill("نص تجريبي")
+                        page.get_by_role("button", name="مفتاح API").click()
+                        page.get_by_role("textbox", name="مفتاح API").fill("test-key")
+                        page.get_by_role("button", name="امسح مفتاح API").click()
+                        expect(page.get_by_role("textbox", name="مفتاح API")).to_have_value("")
+                        page.get_by_text("مفتاح API مطلوب").wait_for()
+                        page.wait_for_function("() => new URLSearchParams(location.search).get('api_key_cleared') === '1'")
+                        page.reload()
+                        page.get_by_text("مفتاح API مطلوب").wait_for()
                         page.get_by_role("button", name="ولّد الصوت").click()
                         page.get_by_text("أدخل مفتاح ElevenLabs API.").wait_for()
                         self.assertFalse(events.exists())
@@ -80,9 +88,9 @@ class BrowserCycleTest(unittest.TestCase):
 
                         page.get_by_role("tab", name="توليد الصوت").click()
                         page.get_by_role("button", name="إعدادات النبرة").click()
-                        page.get_by_role("spinbutton", name="البذرة").wait_for()
-                        page.get_by_role("button", name="بذرة جديدة").click()
-                        generated_seed = int(page.get_by_role("spinbutton", name="البذرة").input_value())
+                        page.get_by_role("spinbutton", name="النبرة").wait_for()
+                        page.get_by_role("button", name="نبرة جديدة").click()
+                        generated_seed = int(page.get_by_role("spinbutton", name="النبرة").input_value())
                         self.assertIn(generated_seed, json.loads((folder / ".local" / "seeds.json").read_text()))
                         page.keyboard.press("Escape")
                         page.get_by_role("button", name="ولّد الصوت").click()
@@ -104,7 +112,11 @@ class BrowserCycleTest(unittest.TestCase):
                         page.get_by_role("textbox", name="معرّف الصوت").fill("library-e2e-id")
                         page.get_by_role("textbox", name="النص العربي").fill("نص من المكتبة")
                         page.get_by_role("button", name="ولّد الصوت").click()
-                        page.get_by_role("button", name="حمّل ملف MP3").wait_for()
+                        for _ in range(50):
+                            if len(list((folder / ".local" / "generated_audio").glob("*.mp3"))) == 2:
+                                break
+                            time.sleep(0.1)
+                        self.assertEqual(len(list((folder / ".local" / "generated_audio").glob("*.mp3"))), 2)
 
                         page.get_by_role("textbox", name="النص العربي").fill("E2E_FAIL")
                         page.get_by_role("button", name="ولّد الصوت").click()
@@ -115,7 +127,7 @@ class BrowserCycleTest(unittest.TestCase):
                         page.get_by_text("تسجيل 2").wait_for()
                         self.assertEqual(page.locator("audio").count(), 2)
                         page.get_by_role("button", name="حمّل ملف MP3").first.hover()
-                        page.get_by_text(f"رقم البذرة: {generated_seed}").wait_for()
+                        page.get_by_text(f"رقم النبرة: {generated_seed}").wait_for()
                         page.reload()
                         page.get_by_role("tab", name="الأصوات المحفوظة").click()
                         page.get_by_text("تسجيل 2").wait_for()

@@ -23,8 +23,15 @@ if __name__ == "__main__" and not streamlit_runtime_exists():
 
 
 load_dotenv()
-st.set_page_config(page_title="منطوق", page_icon="🎙️", layout="wide", initial_sidebar_state="collapsed")
-logo_path = Path(__file__).resolve().parent / "font" / "logocircle.png"
+
+
+def clear_api_key():
+    st.session_state.api_key_input = ""
+    st.query_params["api_key_cleared"] = "1"
+
+
+logo_path = Path(__file__).resolve().parent / "font" / "logobg.png"
+st.set_page_config(page_title="منطوق", page_icon=str(logo_path), layout="wide", initial_sidebar_state="collapsed")
 font = base64.b64encode((Path(__file__).resolve().parent / "font" / "thmanyahsans-Bold.ttf").read_bytes()).decode()
 st.markdown(
     f"""<style>
@@ -54,6 +61,8 @@ st.markdown(
     .st-key-app_header [data-testid="stCaptionContainer"] {{ color: #666; }}
     .st-key-footer {{ border-top: 1px solid #e2e2de; margin-top: 3rem; padding-top: 2rem; }}
     .st-key-footer .manfath-logo {{ display: block; width: 144px; max-width: 100%; margin-inline: auto; }}
+    .st-key-footer .tiktok-link {{ display: grid; place-items: center; width: 44px; height: 44px; margin-inline: auto; }}
+    .st-key-footer .tiktok-link img {{ display: block; width: 1.25rem; height: 1.25rem; }}
     @media (max-width: 640px) {{
       [data-testid="stMainBlockContainer"] {{ padding: 1rem; }}
       .st-key-studio_sheet {{ padding: 1.25rem !important; }}
@@ -67,20 +76,20 @@ st.markdown(
 with st.container(key="app_header"):
     header, connection = st.columns([3, 1], gap="medium", vertical_alignment="center")
     with header:
-        title, logo = st.columns([8, 1], gap="small", vertical_alignment="center")
-        with title:
-            st.title("منطوق", text_alignment="right")
-            st.caption("مساحتك للإبداع بالمنطوق السعودي الأصيل", text_alignment="right")
-        with logo:
+        with st.container(horizontal=True, vertical_alignment="center", gap="small"):
             st.image(logo_path, width=56)
+            st.title("منطوق", text_alignment="right")
+        st.caption("مساحتك للإبداع بالمنطوق السعودي الأصيل", text_alignment="right")
     with connection:
         with st.popover("مفتاح API", icon=":material/key:"):
             entered_api_key = st.text_input(
                 "مفتاح API",
                 type="password",
+                key="api_key_input",
                 help="أدخل مفتاح ElevenLabs أو أضفه إلى .env على جهازك.",
             )
-api_key = entered_api_key or os.getenv("ELEVENLABS_API_KEY", "")
+            ui.button("امسح مفتاح API", key="clear_api_key", variant="ghost", on_click=clear_api_key)
+api_key = entered_api_key or ("" if st.query_params.get("api_key_cleared") == "1" else os.getenv("ELEVENLABS_API_KEY", ""))
 
 if not api_key:
     ui.alert("مفتاح API مطلوب", "أضف مفتاح ElevenLabs من الزر أعلاه قبل التوليد.")
@@ -102,24 +111,24 @@ if active_tab == "توليد الصوت":
         editor, result = st.columns([3, 2], gap="large", vertical_alignment="top")
         with editor:
             st.header("نصك، بصوتك", text_alignment="right")
-            text = st.text_area("النص العربي", placeholder="اكتب النص الذي تريد سماعه…", height=240, key="speech_text")
+            text = st.text_area("النص العربي", placeholder="أكتب جملة، قصيدة ، مقولة او اي شي يجي ببالك", height=240, key="speech_text", label_visibility="hidden")
             voice_source = ui.radio_group(
                 "الصوت",
-                ["صوتي المستنسخ", "صوت من المكتبة"],
+                ["صوتي", "صوت من المكتبة"],
                 index=0 if saved_voice else 1,
                 key="voice_source",
             )
-            if voice_source == "صوتي المستنسخ":
+            if voice_source == "صوتي":
                 voice_id = saved_voice
                 if not saved_voice:
                     ui.alert("لا يوجد صوت محفوظ", "افتح تبويب «استنساخ صوت» لإنشاء صوتك، أو اختر صوتًا من المكتبة.")
             else:
-                voice_id = st.text_input("معرّف الصوت", placeholder="معرّف الصوت من مكتبة ElevenLabs", help="انسخ معرّف الصوت من مكتبة ElevenLabs والصقه هنا.")
+                voice_id = st.text_input("معرّف الصوت", placeholder="الصق معرّف الصوت Voice ID", help="[اختر من مكتبة الاصوات السعودية](https://elevenlabs.io/app/voice-library?required_languages=ar&accent=saudi)")
 
             with st.popover("إعدادات النبرة", icon=":material/tune:"):
-                st.number_input("البذرة", min_value=0, max_value=2**32 - 1, step=1, key="speech_seed", help="استخدم الرقم نفسه لتكرار إعداد النبرة.")
-                ui.button("بذرة جديدة", key="generate_seed", variant="ghost", on_click=generate_seed)
-                st.selectbox("البذور المحفوظة", saved_seeds(), key="saved_seed", on_change=use_saved_seed)
+                st.number_input("النبرة", min_value=0, max_value=2**32 - 1, step=1, key="speech_seed", help="استخدم الرقم نفسه لتكرار إعداد النبرة.")
+                ui.button("نبرة جديدة", key="generate_seed", variant="ghost", on_click=generate_seed)
+                st.selectbox("النبرات المحفوظة", saved_seeds(), key="saved_seed", on_change=use_saved_seed)
             if not api_key:
                 st.caption("أضف مفتاح API من أعلى الصفحة قبل التوليد.", text_alignment="right")
             elif not voice_id:
@@ -159,7 +168,7 @@ elif active_tab == "استنساخ صوت":
             st.caption("أرفع مقطع لك مايتجاوز دقيقة ", text_alignment="right")
             sample = st.file_uploader("التسجيل الصوتي", type=["wav", "mp3", "m4a"])
             st.caption("ملفات WAV أو MP3 أو M4A، بحجم لا يتجاوز 200 ميجابايت.", text_alignment="right")
-            name = ui.input("اسم الصوت", placeholder="صوتي العربي", key="clone_name")
+            name = ui.input("اسم الصوت", key="clone_name")
             create = ui.button("استنسخ الصوت", key="clone", width="stretch")
             if create:
                 try:
@@ -185,15 +194,17 @@ else:
             st.markdown(f"**تسجيل {index}**", text_alignment="right")
             st.caption(datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y/%m/%d · %H:%M"), text_alignment="right")
             st.audio(path, format="audio/mp3")
-            st.download_button("حمّل ملف MP3", path.read_bytes(), path.name, "audio/mpeg", key=path.name, help=f"رقم البذرة: {seed}")
+            st.download_button("حمّل ملف MP3", path.read_bytes(), path.name, "audio/mpeg", key=path.name, help=f"رقم النبرة: {seed}")
 
 with st.container(key="footer"):
     brand, attribution, copyright = st.columns(3, gap="large", vertical_alignment="center")
     with brand:
-        st.markdown("**منطوق**", text_alignment="right")
+        st.image(logo_path, width=120)
     with attribution:
         logo = base64.b64encode((Path(__file__).resolve().parent / "font" / "manfath-logo.png").read_bytes()).decode()
         st.markdown(f'<img class="manfath-logo" src="data:image/png;base64,{logo}" alt="منفذ">', unsafe_allow_html=True)
         st.caption("أحد منتجات منفذ", text_alignment="center")
+        tiktok_icon = base64.b64encode((Path(__file__).resolve().parent / "font" / "tiktok.svg").read_bytes()).decode()
+        st.html(f'''<a class="tiktok-link" href="https://www.tiktok.com/@manfathtech" target="_blank" rel="noopener noreferrer" aria-label="تيك توك — منفذ"><img src="data:image/svg+xml;base64,{tiktok_icon}" alt=""></a>''')
     with copyright:
         st.caption(f"© {datetime.now().year} منطوق. جميع الحقوق محفوظة.", text_alignment="right")
