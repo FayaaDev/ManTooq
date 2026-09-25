@@ -50,12 +50,6 @@ class StaticSiteTest(unittest.TestCase):
                             self.assertEqual(payload["text"], "مرحبًا بالعالم")
                             route.fulfill(status=200, content_type="audio/mpeg", body=b"ID3\x04\x00test")
 
-                    page.route("https://api.elevenlabs.io/**", mock_api)
-                    page.goto(f"http://127.0.0.1:{server.server_port}/")
-                    self.assertEqual(page.locator("html").get_attribute("dir"), "rtl")
-                    page.get_by_role("button", name="ولّد الصوت").click()
-                    page.get_by_text("أدخل مفتاح ElevenLabs API.").wait_for()
-                    self.assertEqual(calls, [])
                     demo_calls = []
 
                     def mock_demo(route):
@@ -67,10 +61,17 @@ class StaticSiteTest(unittest.TestCase):
                         else:
                             route.fulfill(status=429, content_type="application/json", body='{"error":"استخدمت التجربة."}')
 
+                    page.route("https://api.elevenlabs.io/**", mock_api)
                     page.route("**/api/demo", mock_demo)
-                    page.locator("#key-menu summary").click()
-                    page.get_by_role("button", name="جرّب", exact=True).click()
+                    page.goto(f"http://127.0.0.1:{server.server_port}/")
+                    self.assertEqual(page.locator("html").get_attribute("dir"), "rtl")
+                    self.assertEqual(demo_calls, [])
+                    self.assertEqual(calls, [])
+                    self.assertTrue(page.get_by_role("radio", name="اصوات مختارة").is_checked())
                     self.assertEqual(page.get_by_label("النص العربي").get_attribute("maxlength"), "250")
+                    page.get_by_role("button", name="ولّد الصوت").click()
+                    page.get_by_text("أدخل النص المراد تحويله إلى صوت.").wait_for()
+                    self.assertEqual(demo_calls, [])
                     page.get_by_label("النص العربي").fill("س" * 250)
                     page.get_by_label("النص العربي").press("a")
                     self.assertEqual(len(page.get_by_label("النص العربي").input_value()), 250)
@@ -121,6 +122,8 @@ class StaticSiteTest(unittest.TestCase):
                     self.assertIsNone(page.evaluate("localStorage.getItem('mantooq:key')"))
                     page.reload()
                     self.assertEqual(page.get_by_label("مفتاح ElevenLabs").input_value(), "")
+                    self.assertEqual(page.get_by_label("النص العربي").get_attribute("maxlength"), "250")
+                    self.assertTrue(page.get_by_role("radio", name="اصوات مختارة").is_checked())
                 finally:
                     browser.close()
         finally:

@@ -1,4 +1,4 @@
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; media-src blob:; connect-src 'self' https://api.elevenlabs.io; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
-  Referrer-Policy: no-referrer
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self'; font-src 'self'; img-src 'self'; media-src blob:; connect-src 'self' https://api.elevenlabs.io; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Referrer-Policy: origin
   X-Content-Type-Options: nosniff

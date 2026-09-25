@@ -4,7 +4,7 @@ const STORAGE = { key: 'mantooq:key', voice: 'mantooq:voice', seeds: 'mantooq:se
 const settings = { stability: 0.7, similarity_boost: 0.9, use_speaker_boost: true, style: 0, speed: 0.95 };
 let playerUrl;
 let recordingUrls = [];
-let demoMode = false;
+let demoMode = !apiKey();
 
 function message(id, text, error = false) {
   const element = $(id);
@@ -239,16 +239,21 @@ $('api-key').value = apiKey();
 $('key-dot').classList.toggle('active', !!apiKey());
 $('api-key').addEventListener('input', (event) => {
   const value = event.target.value.trim();
-  if (value) demoMode = false;
   if (value) localStorage.setItem(STORAGE.key, value);
   else localStorage.removeItem(STORAGE.key);
   $('key-dot').classList.toggle('active', !!value);
-  renderVoice();
+  if (value) {
+    demoMode = false;
+    renderVoice();
+  } else selectDemo();
 });
-$('try-demo').addEventListener('click', () => {
+function selectDemo() {
   demoMode = true;
   document.querySelector('input[name="voice-source"][value="selected"]').checked = true;
   renderVoice();
+}
+$('try-demo').addEventListener('click', () => {
+  selectDemo();
   $('key-menu').open = false;
   document.querySelector('#tab-speech').click();
   $('speech-text').focus();
@@ -257,7 +262,7 @@ $('clear-key').addEventListener('click', () => {
   localStorage.removeItem(STORAGE.key);
   $('api-key').value = '';
   $('key-dot').classList.remove('active');
-  renderVoice();
+  selectDemo();
   $('key-menu').open = false;
 });
 for (const input of document.querySelectorAll('input[name="voice-source"]')) input.addEventListener('change', renderVoice);
@@ -268,6 +273,7 @@ $('new-seed').addEventListener('click', () => {
 $('saved-seeds').addEventListener('change', (event) => { $('seed').value = event.target.value; });
 $('generate').addEventListener('click', generate);
 $('clone').addEventListener('click', clone);
-if (!voiceId()) document.querySelector('input[name="voice-source"][value="library"]').checked = true;
+if (demoMode) document.querySelector('input[name="voice-source"][value="selected"]').checked = true;
+else if (!voiceId()) document.querySelector('input[name="voice-source"][value="library"]').checked = true;
 renderSeeds();
 renderVoice();

@@ -68,6 +68,28 @@ test('rejects invalid inputs before reserving; failed provider call releases cla
   assert.equal((await request()).status, 200);
 });
 
+test('logs demo outcomes without text, IP, cookie, or API key', async () => {
+  const { request } = setup();
+  const originalLog = console.log;
+  const logs = [];
+  console.log = (line) => logs.push(JSON.parse(line));
+  try {
+    globalThis.fetch = async () => new Response('failure', { status: 500 });
+    assert.equal((await request('192.0.2.9', '', { text: 'private text', voice: 'invalid' })).status, 400);
+    assert.equal((await request()).status, 502);
+    globalThis.fetch = async () => new Response(new Uint8Array([1]));
+    assert.equal((await request()).status, 200);
+    assert.equal((await request()).status, 429);
+    assert.deepEqual(logs, [
+      { event: 'demo', outcome: 'denied', reason: 'invalid_input', status: 400 },
+      { event: 'demo', outcome: 'error', reason: 'generation_failed', status: 502 },
+      { event: 'demo', outcome: 'success', status: 200 },
+      { event: 'demo', outcome: 'denied', reason: 'ip_limit', status: 429 },
+    ]);
+    assert.doesNotMatch(JSON.stringify(logs), /private text|192\.0\.2|server-only-test-key|mantooq_demo/);
+  } finally { console.log = originalLog; }
+});
+
 test('simultaneous requests from one IP make one upstream call', async () => {
   const { request } = setup();
   let calls = 0;

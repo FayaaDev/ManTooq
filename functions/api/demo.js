@@ -6,39 +6,40 @@ async function signature(secret, value) {
   return [...new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)))].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function error(status, message) {
+function error(status, message, reason) {
+  console.log(JSON.stringify({ event: 'demo', outcome: status >= 500 ? 'error' : 'denied', reason, status }));
   return Response.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!env.DEMO_DB || !env.DEMO_SECRET || !env.DEMO_ELEVENLABS_API_KEY) return error(503, 'التجربة غير متاحة الآن.');
+  if (!env.DEMO_DB || !env.DEMO_SECRET || !env.DEMO_ELEVENLABS_API_KEY) return error(503, 'التجربة غير متاحة الآن.', 'unavailable');
   if (request.headers.get('Origin') !== new URL(request.url).origin || request.headers.get('Content-Type')?.split(';')[0] !== 'application/json') {
-    return error(403, 'طلب غير مسموح.');
+    return error(403, 'طلب غير مسموح.', 'forbidden');
   }
   const ip = request.headers.get('CF-Connecting-IP');
-  if (!ip) return error(403, 'تعذّر التحقق من الطلب.');
+  if (!ip) return error(403, 'تعذّر التحقق من الطلب.', 'missing_ip');
   const now = Math.floor(Date.now() / 1000);
   const cookie = request.headers.get('Cookie')?.match(/(?:^|;\s*)mantooq_demo=(\d+)\.([a-f0-9]{64})(?:;|$)/);
   if (cookie && Number(cookie[1]) + DAY > now && cookie[2] === await signature(env.DEMO_SECRET, `cookie:${cookie[1]}`)) {
-    return error(429, 'استخدمت التجربة. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.');
+    return error(429, 'استخدمت التجربة. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.', 'cookie_limit');
   }
 
-  if (Number(request.headers.get('Content-Length')) > 4096) return error(400, 'النص طويل جدًا.');
+  if (Number(request.headers.get('Content-Length')) > 4096) return error(400, 'النص طويل جدًا.', 'invalid_input');
   let input;
   try {
     const body = await request.text();
-    if (body.length > 4096) return error(400, 'النص طويل جدًا.');
+    if (body.length > 4096) return error(400, 'النص طويل جدًا.', 'invalid_input');
     input = JSON.parse(body);
-  } catch { return error(400, 'طلب غير صالح.'); }
+  } catch { return error(400, 'طلب غير صالح.', 'invalid_input'); }
   const text = typeof input?.text === 'string' ? input.text.trim() : '';
-  if (!text || text.length > 250 || !VOICES.has(input.voice)) return error(400, 'أدخل نصًا لا يتجاوز 250 حرفًا واختر صوتًا متاحًا.');
+  if (!text || text.length > 250 || !VOICES.has(input.voice)) return error(400, 'أدخل نصًا لا يتجاوز 250 حرفًا واختر صوتًا متاحًا.', 'invalid_input');
 
   const ipHash = await signature(env.DEMO_SECRET, `ip:${ip}`);
   const claim = crypto.randomUUID();
   const reservation = await env.DEMO_DB.prepare(
     'INSERT INTO demo_uses (ip_hash, expires, claim) VALUES (?, ?, ?) ON CONFLICT(ip_hash) DO UPDATE SET expires = excluded.expires, claim = excluded.claim WHERE demo_uses.expires <= ?'
   ).bind(ipHash, now + DAY, claim, now).run();
-  if (reservation.meta.changes !== 1) return error(429, 'استخدمت التجربة من هذه الشبكة. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.');
+  if (reservation.meta.changes !== 1) return error(429, 'استخدمت التجربة من هذه الشبكة. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.', 'ip_limit');
 
   try {
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${input.voice}?output_format=mp3_44100_128`, {
@@ -50,13 +51,15 @@ export async function onRequestPost({ request, env }) {
     const audio = await response.arrayBuffer();
     if (!audio.byteLength) throw new Error('Empty audio');
     const stamp = String(now);
+    const signedCookie = await signature(env.DEMO_SECRET, `cookie:${stamp}`);
+    console.log(JSON.stringify({ event: 'demo', outcome: 'success', status: 200 }));
     return new Response(audio, { headers: {
       'Content-Type': 'audio/mpeg',
       'Cache-Control': 'no-store',
-      'Set-Cookie': `mantooq_demo=${stamp}.${await signature(env.DEMO_SECRET, `cookie:${stamp}`)}; Max-Age=${DAY}; Path=/api/demo; HttpOnly; Secure; SameSite=Lax`,
+      'Set-Cookie': `mantooq_demo=${stamp}.${signedCookie}; Max-Age=${DAY}; Path=/api/demo; HttpOnly; Secure; SameSite=Lax`,
     } });
   } catch {
     await env.DEMO_DB.prepare('DELETE FROM demo_uses WHERE ip_hash = ? AND claim = ?').bind(ipHash, claim).run();
-    return error(502, 'تعذّر توليد الصوت التجريبي. حاول مجددًا لاحقًا.');
+    return error(502, 'تعذّر توليد الصوت التجريبي. حاول مجددًا لاحقًا.', 'generation_failed');
   }
 }
