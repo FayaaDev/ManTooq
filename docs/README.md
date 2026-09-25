@@ -4,7 +4,16 @@
 
 ## الموقع العام
 
-توجد نسخة ثابتة في `web/` قابلة للنشر مباشرة على Cloudflare Pages (`wrangler pages deploy web --project-name mantooq`). كل زائر يدخل مفتاح ElevenLabs الخاص به؛ يُحفظ في متصفحه ويُرسل مباشرةً إلى ElevenLabs عند توليد الصوت أو استنساخه، ولا يصل إلى خادم منطوق. تُحفظ معرّفات الأصوات والنبرات محليًا في المتصفح، والتسجيلات في IndexedDB؛ لا تنتقل بيانات تطبيق سطح المكتب تلقائيًا إلى الموقع. تجنّب إدخال المفتاح على جهاز مشترك. الموقع مجاني للزيارة، لكن يخضع استخدام ElevenLabs لرصيد حساب الزائر. لا يحتاج الموقع إلى Python أو `.env`.
+توجد نسخة في `web/` قابلة للنشر على Cloudflare Pages (`wrangler pages deploy web --project-name mantooq`). كل زائر يمكنه إدخال مفتاح ElevenLabs الخاص به؛ يُحفظ في متصفحه ويُرسل مباشرةً إلى ElevenLabs عند توليد الصوت أو استنساخه، ولا يصل إلى خادم منطوق. زر «جرّب» يستخدم Pages Function في `functions/api/demo.js` للتوليد بمفتاح تجريبي محفوظ على الخادم؛ لا يُرسل المفتاح للمتصفح. تُحفظ معرّفات الأصوات والنبرات محليًا في المتصفح، والتسجيلات في IndexedDB؛ لا تنتقل بيانات تطبيق سطح المكتب تلقائيًا إلى الموقع. تجنّب إدخال مفتاحك على جهاز مشترك. الموقع مجاني للزيارة، لكن يخضع استخدام ElevenLabs لرصيد الحساب. لا يحتاج الموقع إلى Python أو `.env`.
+
+لتفعيل «جرّب» في مشروع Pages:
+
+1. أنشئ قاعدة D1 وشغّل `demo-schema.sql` عليها (`wrangler d1 create mantooq-demo` ثم `wrangler d1 execute mantooq-demo --remote --file=demo-schema.sql`).
+2. أضف ربط D1 باسم `DEMO_DB` إلى مشروع Pages من **Settings → Bindings**؛ أعد النشر بعد إضافة الربط.
+3. أضف أسرار Pages من جذر المستودع باستخدام `wrangler pages secret put DEMO_ELEVENLABS_API_KEY --project-name mantooq` و`wrangler pages secret put DEMO_SECRET --project-name mantooq`. أدخل القيم عند مطالبة Wrangler بها؛ الأولى مفتاح ElevenLabs التجريبي، والثانية قيمة عشوائية طويلة للتوقيع وبصمة IP. لا تضعهما في الملفات أو في المتصفح. أعد النشر بعد إضافتهما.
+4. انشر الموقع من جذر المستودع بـ `wrangler pages deploy web --project-name mantooq`؛ يجب أن يبقى مجلد `functions/` في جذر المشروع، خارج `web/`.
+
+تتيح التجربة طلب توليد ناجحًا واحدًا لكل متصفح وعنوان IP خلال 24 ساعة، لصوت مختار ونص لا يزيد عن 250 حرفًا. يتشارك مستخدمو الشبكة الواحدة هذا الحد؛ يمكن تجاوزه بتغيير IP. يُستخدم المفتاح الشخصي للتوليد بلا هذا الحد وللاستنساخ. اضبط سقف إنفاق ElevenLabs للمفتاح التجريبي.
 
 ## البدء
 
@@ -40,6 +49,7 @@ uv run python -m app.arabic_tts speak "مرحبا" --voice-id YOUR_VOICE_ID --ou
 uv sync
 uv run python -m playwright install chromium
 uv run python -m unittest -v
+node --test tests/unit/test_demo.mjs
 ```
 
 تشمل الاختبارات دورة استنساخ الصوت وتوليده وتحميله عبر المتصفح، مع عميل ElevenLabs وهمي وتخزين مؤقت؛ لا تحتاج إلى مفتاح API حقيقي.

@@ -4,6 +4,7 @@ const STORAGE = { key: 'mantooq:key', voice: 'mantooq:voice', seeds: 'mantooq:se
 const settings = { stability: 0.7, similarity_boost: 0.9, use_speaker_boost: true, style: 0, speed: 0.95 };
 let playerUrl;
 let recordingUrls = [];
+let demoMode = false;
 
 function message(id, text, error = false) {
   const element = $(id);
@@ -37,12 +38,20 @@ function renderSeeds() {
 function renderVoice() {
   const saved = voiceId();
   const source = document.querySelector('input[name="voice-source"]:checked').value;
+  const text = $('speech-text');
+  if (demoMode) text.maxLength = 250;
+  else text.removeAttribute('maxlength');
+  $('demo-text-count').hidden = !demoMode;
+  $('demo-text-count').textContent = `${text.value.length} / 250 حرفًا`;
   $('library-fields').hidden = source !== 'library';
   $('selected-fields').hidden = source !== 'selected';
   $('saved-voice-hint').hidden = source !== 'saved' || !!saved;
   $('cloned-id').textContent = saved;
   $('cloned-id').hidden = !saved;
-  $('speech-note').textContent = !apiKey()
+  document.querySelector('.seed-settings').hidden = demoMode;
+  $('speech-note').textContent = demoMode
+    ? 'التجربة: 250 حرفًا كحد أقصى، بصوت مختار واحد كل 24 ساعة لكل متصفح وشبكة.'
+    : !apiKey()
     ? 'أضف مفتاح API من أعلى الصفحة قبل التوليد.'
     : source === 'saved' && !saved
       ? 'استنسخ صوتك أو اختر صوتًا من المكتبة.'
@@ -115,10 +124,13 @@ async function generate() {
   const voice = (source === 'library' ? $('voice-id').value : source === 'selected' ? $('selected-voice').value : voiceId()).trim();
   const key = apiKey();
   const seed = Number($('seed').value);
-  if (!key) return message('speech-message', 'أدخل مفتاح ElevenLabs API.', true);
+  if (!key && !demoMode) return message('speech-message', 'أدخل مفتاح ElevenLabs API.', true);
   if (!text) return message('speech-message', 'أدخل النص المراد تحويله إلى صوت.', true);
+  if (demoMode && (source !== 'selected' || text.length > 250)) {
+    return message('speech-message', 'اختر صوتًا من الأصوات المختارة واكتب نصًا لا يتجاوز 250 حرفًا.', true);
+  }
   if (!voice) return message('speech-message', 'استنسخ صوتًا أو أدخل معرّف صوت من المكتبة.', true);
-  if (!$('seed').value || !Number.isInteger(seed) || seed < 0 || seed > 4294967295) {
+  if (!demoMode && (!$('seed').value || !Number.isInteger(seed) || seed < 0 || seed > 4294967295)) {
     return message('speech-message', 'يجب أن تكون قيمة النبرة بين 0 و4294967295.', true);
   }
   const button = $('generate');
@@ -126,13 +138,19 @@ async function generate() {
   button.textContent = 'جارٍ توليد الصوت…';
   message('speech-message', 'جارٍ توليد الصوت…');
   try {
-    saveSeed(seed);
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}?output_format=mp3_44100_128`, {
+    if (!demoMode) saveSeed(seed);
+    const response = await fetch(demoMode ? '/api/demo' : `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}?output_format=mp3_44100_128`, {
       method: 'POST',
-      headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, model_id: 'eleven_v3', voice_settings: settings, seed }),
+      headers: demoMode ? { 'Content-Type': 'application/json' } : { 'xi-api-key': key, 'Content-Type': 'application/json' },
+      body: demoMode ? JSON.stringify({ text, voice }) : JSON.stringify({ text, model_id: 'eleven_v3', voice_settings: settings, seed }),
     });
-    if (!response.ok) throw new Error(String(response.status));
+    if (!response.ok) {
+      if (demoMode) {
+        const result = await response.json().catch(() => ({}));
+        return message('speech-message', result.error || 'تعذّر توليد الصوت التجريبي.', true);
+      }
+      throw new Error(String(response.status));
+    }
     const audio = await response.blob();
     if (!audio.size) throw new Error('empty audio');
     if (playerUrl) URL.revokeObjectURL(playerUrl);
@@ -143,10 +161,10 @@ async function generate() {
     $('player-ready').hidden = false;
     message('speech-message', 'صوتك جاهز للاستماع والتحميل.');
     try {
-      await recordingsRequest('readwrite', (store) => store.put({ id: crypto.randomUUID(), created: Date.now(), seed, audio }));
+      await recordingsRequest('readwrite', (store) => store.put({ id: crypto.randomUUID(), created: Date.now(), seed: demoMode ? DEFAULT_SEED : seed, audio }));
     } catch { message('speech-message', 'صوتك جاهز للتحميل، لكن تعذّر حفظه في هذا المتصفح.', true); }
   } catch {
-    message('speech-message', 'تعذّر توليد الصوت. تحقق من اتصالك بالإنترنت ومفتاح API ومعرّف الصوت، ثم أعد المحاولة.', true);
+    message('speech-message', demoMode ? 'تعذّر توليد الصوت التجريبي. حاول مجددًا لاحقًا.' : 'تعذّر توليد الصوت. تحقق من اتصالك بالإنترنت ومفتاح API ومعرّف الصوت، ثم أعد المحاولة.', true);
   } finally {
     button.disabled = false;
     button.textContent = 'ولّد الصوت';
@@ -214,14 +232,26 @@ for (const tab of tabs) {
 }
 
 $('year').textContent = new Date().getFullYear();
+$('speech-text').addEventListener('input', () => {
+  if (demoMode) $('demo-text-count').textContent = `${$('speech-text').value.length} / 250 حرفًا`;
+});
 $('api-key').value = apiKey();
 $('key-dot').classList.toggle('active', !!apiKey());
 $('api-key').addEventListener('input', (event) => {
   const value = event.target.value.trim();
+  if (value) demoMode = false;
   if (value) localStorage.setItem(STORAGE.key, value);
   else localStorage.removeItem(STORAGE.key);
   $('key-dot').classList.toggle('active', !!value);
   renderVoice();
+});
+$('try-demo').addEventListener('click', () => {
+  demoMode = true;
+  document.querySelector('input[name="voice-source"][value="selected"]').checked = true;
+  renderVoice();
+  $('key-menu').open = false;
+  document.querySelector('#tab-speech').click();
+  $('speech-text').focus();
 });
 $('clear-key').addEventListener('click', () => {
   localStorage.removeItem(STORAGE.key);

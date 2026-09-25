@@ -78,6 +78,9 @@ audio { width: 100%; }
 .footer { border-top: 1px solid #e2e2de; }
 .footer-inner { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; align-items: center; min-height: 170px; padding-block: 30px; }
 .footer-inner > p { margin: 0; color: #666; font-size: .875rem; }
+.footer-download { display: grid; justify-items: center; gap: 12px; }
+.footer-download a { display: inline-flex; align-items: center; gap: 9px; padding: 9px 14px; border: 1px solid #d6d6d1; border-radius: 6px; text-decoration: none; white-space: nowrap; }
+.footer-download a:hover { background: #f6f6f4; }
 .footer-brand { text-align: center; }
 .footer-brand > img { max-width: 100%; }
 .footer-brand p { color: #666; font-size: .875rem; margin: 7px 0 12px; }

@@ -7,6 +7,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(target_os = "macos")]
+use tauri::webview::NewWindowResponse;
 use tauri::{Manager, RunEvent};
 
 #[cfg(target_os = "windows")]
@@ -66,6 +68,16 @@ fn main() {
     tauri::Builder::default()
         .manage(Server(Mutex::new(None)))
         .setup(|app| {
+            let window =
+                tauri::WebviewWindowBuilder::from_config(app, &app.config().app.windows[0])?;
+            #[cfg(target_os = "macos")]
+            let window = window.on_new_window(|url, _| {
+                if url.scheme() == "https" {
+                    let _ = Command::new("open").arg(url.as_str()).status();
+                }
+                NewWindowResponse::Deny
+            });
+            window.build()?;
             let handle = app.handle().clone();
             thread::spawn(move || {
                 if start(handle.clone()).is_err() {
