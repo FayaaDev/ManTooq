@@ -23,6 +23,7 @@ src-tauri/target/
 src-tauri/icons/
 src-tauri/gen/
 mantooq-server.spec
+dmg.md
 
 # Local agent tooling
 .agents/

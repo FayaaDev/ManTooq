@@ -15,7 +15,7 @@
       "name": "Studio sheet",
       "kind": "card",
       "description": "The single writing and playback surface.",
-      "html": "<div class=\"ds-sheet\">نصك، بصوتك</div>",
+      "html": "<div class=\"ds-sheet\">نَصّك بصوتك</div>",
       "css": ".ds-sheet { background: #fff; color: #172c3a; border-radius: 12px; padding: 2rem; box-shadow: 0 16px 45px rgba(28, 53, 70, .08); font-weight: 700; }"
     },
     {

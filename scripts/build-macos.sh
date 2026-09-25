@@ -4,6 +4,7 @@ set -eu
 cd "$(dirname "$0")/.."
 
 uv run --with pyinstaller==6.22.3 pyinstaller --noconfirm --clean --onedir \
+  --codesign-identity "${APPLE_SIGNING_IDENTITY:--}" \
   --name mantooq-server \
   --collect-all streamlit --collect-all streamlit_shadcn_ui \
   --paths app --hidden-import arabic_tts \

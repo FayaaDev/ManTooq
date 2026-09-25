@@ -53,7 +53,7 @@ class BrowserCycleTest(unittest.TestCase):
                         page.get_by_role("heading", name="منطوق").wait_for()
                         page.get_by_text("أحد منتجات منفذ").wait_for()
                         self.assertEqual(page.get_by_role("img", name="منفذ").count(), 1)
-                        for name in ("منطوق", "نصك، بصوتك", "الاستماع"):
+                        for name in ("منطوق", "نَصّك بصوتك", "الاستماع"):
                             heading = page.get_by_role("heading", name=name)
                             self.assertEqual(heading.evaluate("element => getComputedStyle(element).textAlign"), "right")
                         self.assertEqual(page.get_by_text("شيّك هنا بعد توليد الصوت").evaluate("element => getComputedStyle(element).textAlign"), "right")

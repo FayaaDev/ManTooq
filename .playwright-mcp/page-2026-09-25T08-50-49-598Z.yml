@@ -24,8 +24,8 @@
             - tab "الأصوات المحفوظة" [ref=e47]
       - generic [ref=e51]:
         - generic [ref=e53]:
-          - heading "نصك، بصوتك" [level=2] [ref=e58]:
-            - text: نصك، بصوتك
+          - heading "نَصّك بصوتك" [level=2] [ref=e58]:
+            - text: نَصّك بصوتك
             - generic [ref=e59]:
               - link "Link to heading":
                 - /url: "#nsk-bswtk"

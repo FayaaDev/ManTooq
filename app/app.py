@@ -110,7 +110,7 @@ if active_tab == "توليد الصوت":
     with st.container(key="studio_sheet"):
         editor, result = st.columns([3, 2], gap="large", vertical_alignment="top")
         with editor:
-            st.header("نصك، بصوتك", text_alignment="right")
+            st.header("نَصّك بصوتك", text_alignment="right")
             text = st.text_area("النص العربي", placeholder="أكتب جملة، قصيدة ، مقولة او اي شي يجي ببالك", height=240, key="speech_text", label_visibility="hidden")
             voice_source = ui.radio_group(
                 "الصوت",
