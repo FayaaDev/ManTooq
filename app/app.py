@@ -81,6 +81,10 @@ if active_tab == "توليد الصوت":
     def use_saved_seed():
         st.session_state.speech_seed = int(st.session_state.saved_seed)
 
+    def generate_seed():
+        st.session_state.speech_seed = secrets.randbits(32)
+        save_seed(st.session_state.speech_seed)
+
     with st.container(key="studio_sheet"):
         editor, result = st.columns([3, 2], gap="large", vertical_alignment="top")
         with editor:
@@ -101,9 +105,7 @@ if active_tab == "توليد الصوت":
 
             with st.popover("إعدادات النبرة", icon=":material/tune:"):
                 st.number_input("البذرة", min_value=0, max_value=2**32 - 1, step=1, key="speech_seed", help="استخدم الرقم نفسه لتكرار إعداد النبرة.")
-                if ui.button("بذرة جديدة", key="generate_seed", variant="ghost"):
-                    st.session_state.speech_seed = secrets.randbits(32)
-                    save_seed(st.session_state.speech_seed)
+                ui.button("بذرة جديدة", key="generate_seed", variant="ghost", on_click=generate_seed)
                 st.selectbox("البذور المحفوظة", saved_seeds(), key="saved_seed", on_change=use_saved_seed)
             if not api_key:
                 st.caption("أضف مفتاح API من أعلى الصفحة قبل التوليد.", text_alignment="right")
