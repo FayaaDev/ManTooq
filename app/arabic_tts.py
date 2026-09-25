@@ -13,9 +13,11 @@ from elevenlabs.types import VoiceSettings
 
 
 ROOT = Path(__file__).resolve().parent.parent
-VOICE_FILE = ROOT / ".local" / "voice_id"
-SEED_FILE = ROOT / ".local" / "seeds.json"
-GENERATED_AUDIO_DIR = ROOT / ".local" / "generated_audio"
+# Tauri passes its user-writable app-data directory to the bundled Python process.
+DATA_DIR = Path(os.environ["MANTOOQ_DATA_DIR"]).expanduser() if os.getenv("MANTOOQ_DATA_DIR") else ROOT / ".local"
+VOICE_FILE = DATA_DIR / "voice_id"
+SEED_FILE = DATA_DIR / "seeds.json"
+GENERATED_AUDIO_DIR = DATA_DIR / "generated_audio"
 DEFAULT_SEED = 2752657480
 VOICE_SETTINGS = VoiceSettings(
     stability=0.7,
@@ -32,7 +34,7 @@ def default_voice_id():
 
     # Keep existing local clones usable when upgrading from the original scripts.
     old_file = ROOT / "cloned_voice_id.txt"
-    if old_file.exists():
+    if not os.getenv("MANTOOQ_DATA_DIR") and old_file.exists():
         voice_id = old_file.read_text().strip()
         if voice_id:
             save_voice_id(voice_id)
