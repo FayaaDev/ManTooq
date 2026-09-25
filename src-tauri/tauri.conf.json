@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "منطوق",
+  "version": "0.1.0",
+  "identifier": "com.mantooq.desktop",
+  "build": {
+    "frontendDist": "../desktop"
+  },
+  "app": {
+    "windows": [{
+      "label": "main",
+      "title": "منطوق",
+      "width": 1100,
+      "height": 780,
+      "minWidth": 720,
+      "minHeight": 540
+    }]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg"],
+    "icon": ["icons/icon.png", "icons/icon.icns"],
+    "macOS": { "signingIdentity": "-" },
+    "resources": {
+      "../dist/mantooq-server": "python/mantooq-server"
+    }
+  }
+}

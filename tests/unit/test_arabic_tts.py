@@ -1,3 +1,5 @@
+import importlib
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,6 +9,44 @@ from app import arabic_tts
 
 
 class VoiceFlowTest(unittest.TestCase):
+    def test_packaged_data_persists_across_module_restarts_without_saving_key(self):
+        with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {
+            "MANTOOQ_DATA_DIR": str(Path(folder) / "app-data"),
+            "ELEVENLABS_API_KEY": "private-test-key",
+        }):
+            try:
+                importlib.reload(arabic_tts)
+                data_dir = Path(folder) / "app-data"
+                (Path(folder) / "cloned_voice_id.txt").write_text("bundled-voice\n")
+                with patch.object(arabic_tts, "ROOT", Path(folder)):
+                    self.assertEqual(arabic_tts.default_voice_id(), "")
+                with patch.object(arabic_tts, "ElevenLabs") as client:
+                    client.return_value.voices.ivc.create.return_value.voice_id = "cloned-id"
+                    arabic_tts.clone_voice(b"sample", "sample.wav", "My voice", os.environ["ELEVENLABS_API_KEY"])
+                arabic_tts.save_seed(123)
+                audio = arabic_tts.save_generated_audio(b"ID3test", 123)
+
+                importlib.reload(arabic_tts)
+                self.assertEqual(arabic_tts.default_voice_id(), "cloned-id")
+                self.assertEqual(arabic_tts.saved_seeds(), [arabic_tts.DEFAULT_SEED, 123])
+                self.assertEqual(arabic_tts.saved_generated_audio(), [(audio, 123)])
+                self.assertEqual(audio.read_bytes(), b"ID3test")
+                self.assertEqual({path.name for path in data_dir.iterdir()}, {"voice_id", "seeds.json", "generated_audio"})
+                for path in (arabic_tts.VOICE_FILE, arabic_tts.SEED_FILE, audio):
+                    self.assertNotIn(b"private-test-key", path.read_bytes())
+            finally:
+                importlib.reload(arabic_tts)
+
+    def test_source_paths_remain_the_default(self):
+        with patch.dict(os.environ, {"MANTOOQ_DATA_DIR": ""}):
+            try:
+                importlib.reload(arabic_tts)
+                self.assertEqual(arabic_tts.VOICE_FILE, arabic_tts.ROOT / ".local" / "voice_id")
+                self.assertEqual(arabic_tts.SEED_FILE, arabic_tts.ROOT / ".local" / "seeds.json")
+                self.assertEqual(arabic_tts.GENERATED_AUDIO_DIR, arabic_tts.ROOT / ".local" / "generated_audio")
+            finally:
+                importlib.reload(arabic_tts)
+
     def test_existing_clone_id_is_migrated(self):
         with tempfile.TemporaryDirectory() as folder, patch.object(
             arabic_tts, "ROOT", Path(folder)

@@ -19,6 +19,10 @@ output/
 *.wav
 *.m4a
 .DS_Store
+src-tauri/target/
+src-tauri/icons/
+src-tauri/gen/
+mantooq-server.spec
 
 # Local agent tooling
 .agents/
