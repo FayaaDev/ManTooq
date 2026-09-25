@@ -28,45 +28,53 @@ font = base64.b64encode((Path(__file__).resolve().parent / "font" / "thmanyahsan
 st.markdown(
     f"""<style>
     @font-face {{ font-family: Thmanyah; src: url(data:font/ttf;base64,{font}) format('truetype'); font-weight: 700; }}
-    .stApp {{ direction: rtl; text-align: right; background: #eaf0f3; color: #172c3a; }}
+    .stApp {{ direction: rtl; text-align: right; background: #fff; color: #171717; }}
     .stApp, .stApp *:not([data-testid="stIconMaterial"]) {{ font-family: Thmanyah, sans-serif !important; }}
     [data-ssui-v2-host] {{ direction: rtl !important; }}
-    [data-testid="stMainBlockContainer"] {{ max-width: 1200px; padding-top: 1.5rem; }}
+    [data-testid="stMainBlockContainer"] {{ max-width: 1100px; padding-top: 1.5rem; padding-bottom: 2rem; }}
     [data-testid="stMainBlockContainer"] > div > div {{ gap: 1rem; }}
     h1 {{ font-size: 1.65rem !important; line-height: 1.45 !important; letter-spacing: -.02em; }}
     h2, h3 {{ font-size: 1.2rem !important; }}
-    .stApp a {{ text-underline-offset: 3px; color: #2254b4; }}
-    .stApp ::selection {{ background: #bdd2f5; color: #142b3a; }}
-    .stApp :focus-visible {{ outline-color: #2254b4; }}
+    .stApp a {{ text-underline-offset: 3px; color: #111; }}
+    .stApp ::selection {{ background: #deded9; color: #171717; }}
+    .stApp :focus-visible {{ outline-color: #111; }}
     .stApp input[type=password], .stApp input[aria-label="معرّف الصوت"] {{ direction: ltr; text-align: left; }}
-    .st-key-studio_sheet {{ background: #fff; border: 0; border-radius: 12px; padding: 2rem !important; box-shadow: 0 16px 45px rgba(28, 53, 70, .08); }}
+    .st-key-studio_sheet {{ background: #fff; border: 1px solid #e2e2de; border-radius: 10px; padding: 2rem !important; }}
     .st-key-studio_sheet [data-testid="stVerticalBlock"] {{ gap: .85rem; }}
-    .st-key-studio_sheet textarea {{ font-size: 1.25rem; line-height: 1.9; background: #f7f9fa; border-color: #dce5ea; }}
-    .st-key-studio_sheet textarea::placeholder {{ color: #536977; }}
-    .st-key-playback {{ border-inline-start: 1px solid #dce5ea; padding-inline-start: 1.75rem; min-height: 390px; }}
+    .st-key-studio_sheet textarea {{ font-size: 1.25rem; line-height: 1.9; background: #f6f6f4; border-color: #e2e2de; }}
+    .st-key-studio_sheet textarea::placeholder {{ color: #666; }}
+    .st-key-playback {{ border-inline-start: 1px solid #e2e2de; padding-inline-start: 1.75rem; min-height: 390px; }}
     .st-key-playback [data-testid="stAudio"] {{ margin-top: 1.5rem; }}
-    .st-key-clone_guidance {{ border-inline-start: 1px solid #dce5ea; padding-inline-start: 1.75rem; min-height: 240px; }}
+    .st-key-clone_guidance {{ border-inline-start: 1px solid #e2e2de; padding-inline-start: 1.75rem; min-height: 240px; }}
     .st-key-studio_sheet [data-testid="stCode"] {{ direction: ltr; text-align: left; }}
+    .st-key-app_header {{ position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid #e2e2de; margin-bottom: 1.5rem; padding-block: .9rem; }}
+    .st-key-app_header [data-testid="stVerticalBlock"] {{ gap: 0; }}
+    .st-key-app_header h1 {{ margin: 0; }}
+    .st-key-app_header [data-testid="stCaptionContainer"] {{ color: #666; }}
+    .st-key-footer {{ border-top: 1px solid #e2e2de; margin-top: 3rem; padding-top: 2rem; }}
+    .st-key-footer .manfath-logo {{ display: block; width: 144px; max-width: 100%; margin-inline: auto; }}
     @media (max-width: 640px) {{
       [data-testid="stMainBlockContainer"] {{ padding: 1rem; }}
       .st-key-studio_sheet {{ padding: 1.25rem !important; }}
       .st-key-studio_sheet textarea {{ min-height: 210px; }}
-      .st-key-playback {{ border-inline-start: 0; border-top: 1px solid #dce5ea; padding-inline-start: 0; padding-top: 1.25rem; min-height: 0; }}
-      .st-key-clone_guidance {{ border-inline-start: 0; border-top: 1px solid #dce5ea; padding-inline-start: 0; padding-top: 1.25rem; min-height: 0; }}
+      .st-key-playback {{ border-inline-start: 0; border-top: 1px solid #e2e2de; padding-inline-start: 0; padding-top: 1.25rem; min-height: 0; }}
+      .st-key-clone_guidance {{ border-inline-start: 0; border-top: 1px solid #e2e2de; padding-inline-start: 0; padding-top: 1.25rem; min-height: 0; }}
     }}
     </style>""",
     unsafe_allow_html=True,
 )
-header, connection = st.columns([3, 1], gap="medium", vertical_alignment="center")
-with header:
-    st.title("منطوق", text_alignment="right")
-with connection:
-    with st.popover("مفتاح API", icon=":material/key:"):
-        entered_api_key = st.text_input(
-            "مفتاح API",
-            type="password",
-            help="أدخل مفتاح ElevenLabs أو أضفه إلى .env على جهازك.",
-        )
+with st.container(key="app_header"):
+    header, connection = st.columns([3, 1], gap="medium", vertical_alignment="center")
+    with header:
+        st.title("منطوق", text_alignment="right")
+        st.caption("مساحة العمل الصوتي العربية", text_alignment="right")
+    with connection:
+        with st.popover("مفتاح API", icon=":material/key:"):
+            entered_api_key = st.text_input(
+                "مفتاح API",
+                type="password",
+                help="أدخل مفتاح ElevenLabs أو أضفه إلى .env على جهازك.",
+            )
 api_key = entered_api_key or os.getenv("ELEVENLABS_API_KEY", "")
 
 if not api_key:
@@ -179,3 +187,14 @@ else:
                         elements.button("البذرة", key=f"seed_{index}", variant="ghost", size="sm")
             st.audio(path, format="audio/mp3")
             st.download_button("حمّل ملف MP3", path.read_bytes(), path.name, "audio/mpeg", key=path.name)
+
+with st.container(key="footer"):
+    brand, attribution, copyright = st.columns(3, gap="large", vertical_alignment="center")
+    with brand:
+        st.markdown("**منطوق**", text_alignment="right")
+    with attribution:
+        logo = base64.b64encode((Path(__file__).resolve().parent / "font" / "manfath-logo.png").read_bytes()).decode()
+        st.markdown(f'<img class="manfath-logo" src="data:image/png;base64,{logo}" alt="منفذ">', unsafe_allow_html=True)
+        st.caption("أحد منتجات منفذ", text_alignment="center")
+    with copyright:
+        st.caption(f"© {datetime.now().year} منطوق. جميع الحقوق محفوظة.", text_alignment="right")

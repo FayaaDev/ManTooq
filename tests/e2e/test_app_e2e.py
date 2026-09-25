@@ -51,6 +51,8 @@ class BrowserCycleTest(unittest.TestCase):
                         page = browser.new_page(accept_downloads=True)
                         page.goto(f"http://127.0.0.1:{port}")
                         page.get_by_role("heading", name="منطوق").wait_for()
+                        page.get_by_text("أحد منتجات منفذ").wait_for()
+                        self.assertEqual(page.get_by_role("img", name="منفذ").count(), 1)
                         for name in ("منطوق", "نصك، بصوتك", "الاستماع"):
                             heading = page.get_by_role("heading", name=name)
                             self.assertEqual(heading.evaluate("element => getComputedStyle(element).textAlign"), "right")

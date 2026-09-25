@@ -2,13 +2,13 @@
 name: منطوق
 description: Arabic-first local voice workbench
 colors:
-  accent: "#2254b4"
-  canvas: "#eaf0f3"
+  accent: "#111111"
+  canvas: "#ffffff"
   sheet: "#ffffff"
-  editor: "#f7f9fa"
-  ink: "#172c3a"
-  muted-ink: "#536977"
-  rule: "#dce5ea"
+  editor: "#f6f6f4"
+  ink: "#171717"
+  muted-ink: "#666666"
+  rule: "#e2e2de"
 typography:
   title:
     fontFamily: "Thmanyah, sans-serif"
@@ -26,13 +26,13 @@ rounded:
 
 ## Overview
 
-**Creative North Star: "Arabic type studio"**
+**Creative North Star: "Arabic type studio in the منفذ visual family"**
 
-A cool, quiet writing space puts Arabic text at the center of voice generation. The writing sheet separates the task from the surrounding canvas; the playback area belongs to the same surface. Controls stay familiar and secondary settings recede into popovers.
+A white, quiet writing space puts Arabic text at the center of voice generation. The writing sheet and playback area share one outlined surface. Controls stay familiar and secondary settings recede into popovers. The footer carries the منفذ mark and product attribution.
 
 ## Colors
 
-The cool canvas and white sheet establish the workspace. Dark ink carries text; mineral-blue rules separate regions; the accent colors links, focus, and selection. Shadcn V2 primary actions retain their dark native treatment.
+White and warm off-white surfaces establish the workspace. Charcoal ink carries text and primary actions; pale gray rules separate regions. Focus and selection use the same monochrome palette as the Hermes site.
 
 ## Typography
 
@@ -40,15 +40,15 @@ Bundled Thmanyah is the Arabic interface face, including labels and headings. Th
 
 ## Layout
 
-The main content is capped at 1200px. A compact brand/key row leads into workflow tabs, then a single sheet. On desktop the editor sits to the right of playback; at 640px and below the regions stack with writing first. Voice and action stay close to the editor, while seed controls open on demand.
+The main content is capped at 1100px. A sticky header carries the brand, a short product descriptor, and the API-key control, then workflow tabs lead into a single sheet. On desktop the editor sits to the right of playback; at 640px and below the regions stack with writing first. Voice and action stay close to the editor, while seed controls open on demand. A ruled footer holds the product name, منفذ logo and attribution, and copyright; its columns stack on mobile.
 
 ## Elevation & Depth
 
-The sheet has one soft ambient shadow (`0 16px 45px rgba(28, 53, 70, .08)`). Its playback area is separated by a fine rule, not a second card.
+The sheet uses a fine border without a shadow. Its playback area is separated by a matching rule, not a second card.
 
 ## Shapes
 
-The sheet uses a gently curved 12px edge. Inputs and V2 controls keep their native corner language.
+The sheet uses a gently curved 10px edge. Inputs and V2 controls keep their native corner language.
 
 ## Components
 
