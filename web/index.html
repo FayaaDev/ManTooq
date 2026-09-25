@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>منطوق — استوديو الصوت العربي</title>
+  <link rel="icon" href="font/logobg.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img src="font/logobg.png" width="56" height="56" alt="">
+        <div><h1>منطوق</h1><p>مساحتك للإبداع بالمنطوق السعودي الأصيل</p></div>
+      </div>
+      <details class="key-menu" id="key-menu">
+        <summary><span class="key-dot" id="key-dot"></span>مفتاح API</summary>
+        <div class="key-panel">
+          <label for="api-key">مفتاح ElevenLabs</label>
+          <input id="api-key" type="password" dir="ltr" autocomplete="off" spellcheck="false" placeholder="الصق مفتاحك هنا">
+          <p>يُحفظ في هذا المتصفح، ويُرسل إلى ElevenLabs فقط عند الاستخدام. لا تضفه على جهاز مشترك.</p>
+          <button type="button" class="text-button" id="clear-key">امسح مفتاح API</button>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="tabs" role="tablist" aria-label="سير العمل">
+      <button type="button" role="tab" id="tab-speech" aria-controls="panel-speech" aria-selected="true">توليد الصوت</button>
+      <button type="button" role="tab" id="tab-clone" aria-controls="panel-clone" aria-selected="false" tabindex="-1">استنساخ صوت</button>
+      <button type="button" role="tab" id="tab-history" aria-controls="panel-history" aria-selected="false" tabindex="-1">الأصوات المحفوظة</button>
+    </div>
+
+    <section role="tabpanel" id="panel-speech" aria-labelledby="tab-speech" class="sheet studio">
+      <div class="editor">
+        <h2>نصك، بصوتك</h2>
+        <label for="speech-text" class="visually-hidden">النص العربي</label>
+        <textarea id="speech-text" rows="7" placeholder="اكتب جملة، قصيدة، مقولة أو أي شيء يجي ببالك"></textarea>
+        <fieldset class="voice-choice">
+          <legend>الصوت</legend>
+          <label><input type="radio" name="voice-source" value="saved" checked> صوتي</label>
+          <label><input type="radio" name="voice-source" value="library"> صوت من المكتبة</label>
+        </fieldset>
+        <p id="saved-voice-hint" class="muted">لا يوجد صوت محفوظ. استنسخ صوتك أو اختر صوتًا من المكتبة.</p>
+        <div id="library-fields" hidden>
+          <label for="voice-id">معرّف الصوت</label>
+          <input id="voice-id" type="text" dir="ltr" autocomplete="off" spellcheck="false" placeholder="الصق معرّف الصوت Voice ID">
+          <a class="field-link" href="https://elevenlabs.io/app/voice-library?required_languages=ar&amp;accent=saudi" target="_blank" rel="noopener noreferrer">اختر من مكتبة الأصوات السعودية ↗</a>
+        </div>
+        <details class="seed-settings">
+          <summary>إعدادات النبرة</summary>
+          <div class="seed-controls">
+            <label for="seed">النبرة</label>
+            <input id="seed" type="number" min="0" max="4294967295" step="1" inputmode="numeric" dir="ltr" value="2752657480">
+            <button type="button" id="new-seed" class="secondary-button">نبرة جديدة</button>
+            <label for="saved-seeds">النبرات المحفوظة</label>
+            <select id="saved-seeds" dir="ltr"></select>
+          </div>
+        </details>
+        <p id="speech-note" class="muted">أضف مفتاح API من أعلى الصفحة قبل التوليد.</p>
+        <p id="speech-message" class="message" role="status" aria-live="polite" hidden></p>
+        <button type="button" id="generate" class="primary-button">ولّد الصوت</button>
+      </div>
+      <div class="playback">
+        <h2>الاستماع</h2>
+        <div id="player-empty" class="empty-result">شيّك هنا بعد توليد الصوت</div>
+        <div id="player-ready" hidden>
+          <audio id="player" controls preload="none" aria-label="الصوت المولّد"></audio>
+          <a id="download" class="download-button" download="speech.mp3">حمّل ملف MP3</a>
+        </div>
+      </div>
+    </section>
+
+    <section role="tabpanel" id="panel-clone" aria-labelledby="tab-clone" class="sheet studio" hidden>
+      <div class="editor">
+        <h2>استنسخ صوتك</h2>
+        <p class="muted">ارفع مقطعًا صوتيًا تملك حق استنساخه.</p>
+        <label for="sample">التسجيل الصوتي</label>
+        <input id="sample" type="file" accept=".wav,.mp3,.m4a,audio/wav,audio/mpeg,audio/mp4">
+        <p class="muted">WAV أو MP3 أو M4A، حتى 200 ميجابايت.</p>
+        <label for="clone-name">اسم الصوت</label>
+        <input id="clone-name" type="text" autocomplete="off" placeholder="سمّ صوتك">
+        <p id="clone-message" class="message" role="status" aria-live="polite" hidden></p>
+        <button type="button" id="clone" class="primary-button">استنسخ الصوت</button>
+      </div>
+      <div class="playback clone-guidance">
+        <h2>صوتك في الاستوديو</h2>
+        <p class="muted">سيظهر الصوت المستنسخ تلقائيًا في تبويب «توليد الصوت». يُحفظ معرّفه في هذا المتصفح فقط.</p>
+        <p id="cloned-id" class="voice-reference" dir="ltr" hidden></p>
+      </div>
+    </section>
+
+    <section role="tabpanel" id="panel-history" aria-labelledby="tab-history" class="sheet history" hidden>
+      <h2>الأصوات المحفوظة</h2>
+      <p id="history-empty" class="muted">ستظهر تسجيلاتك هنا بعد التوليد.</p>
+      <div id="recordings" class="recordings"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <img src="font/logobg.png" width="110" alt="منطوق">
+      <div class="footer-brand"><img src="font/manfath-logo.png" width="144" alt="منفذ"><p>أحد منتجات منفذ</p><a href="https://www.tiktok.com/@manfathtech" target="_blank" rel="noopener noreferrer" aria-label="تيك توك — منفذ"><img src="font/tiktok.svg" width="20" height="20" alt=""></a></div>
+      <p>© <span id="year"></span> منطوق. جميع الحقوق محفوظة.</p>
+    </div>
+  </footer>
+</body>
+</html>
