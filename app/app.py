@@ -114,7 +114,7 @@ if active_tab == "توليد الصوت":
             text = st.text_area("النص العربي", placeholder="أكتب جملة، قصيدة ، مقولة او اي شي يجي ببالك", height=240, key="speech_text", label_visibility="hidden")
             voice_source = ui.radio_group(
                 "الصوت",
-                ["صوتي", "صوت من المكتبة"],
+                ["صوتي", "صوت من المكتبة", "اصوات مختارة"],
                 index=0 if saved_voice else 1,
                 key="voice_source",
             )
@@ -122,8 +122,15 @@ if active_tab == "توليد الصوت":
                 voice_id = saved_voice
                 if not saved_voice:
                     ui.alert("لا يوجد صوت محفوظ", "افتح تبويب «استنساخ صوت» لإنشاء صوتك، أو اختر صوتًا من المكتبة.")
-            else:
+            elif voice_source == "صوت من المكتبة":
                 voice_id = st.text_input("معرّف الصوت", placeholder="الصق معرّف الصوت Voice ID", help="[اختر من مكتبة الاصوات السعودية](https://elevenlabs.io/app/voice-library?required_languages=ar&accent=saudi)")
+            else:
+                selected_voice = st.selectbox(
+                    "الصوت المختار",
+                    [("ناصر", "cFUFIbKkO2iZFwS8cRnY"), ("عبدالله", "t9akNmCDhz230CEXOYmn"), ("فارس", "T9KaXxyeFWyP8DFgs9bx"), ("نورة", "ckaeRWMtCV0u0pUT3wX1"), ("حساوي", "kr4VZw8MSZMHE0y2m40n")],
+                    format_func=lambda voice: voice[0],
+                )
+                voice_id = selected_voice[1]
 
             with st.popover("إعدادات النبرة", icon=":material/tune:"):
                 st.number_input("النبرة", min_value=0, max_value=2**32 - 1, step=1, key="speech_seed", help="استخدم الرقم نفسه لتكرار إعداد النبرة.")

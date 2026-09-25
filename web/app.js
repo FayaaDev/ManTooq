@@ -36,14 +36,15 @@ function renderSeeds() {
 
 function renderVoice() {
   const saved = voiceId();
-  const library = document.querySelector('input[name="voice-source"]:checked').value === 'library';
-  $('library-fields').hidden = !library;
-  $('saved-voice-hint').hidden = library || !!saved;
+  const source = document.querySelector('input[name="voice-source"]:checked').value;
+  $('library-fields').hidden = source !== 'library';
+  $('selected-fields').hidden = source !== 'selected';
+  $('saved-voice-hint').hidden = source !== 'saved' || !!saved;
   $('cloned-id').textContent = saved;
   $('cloned-id').hidden = !saved;
   $('speech-note').textContent = !apiKey()
     ? 'أضف مفتاح API من أعلى الصفحة قبل التوليد.'
-    : !library && !saved
+    : source === 'saved' && !saved
       ? 'استنسخ صوتك أو اختر صوتًا من المكتبة.'
       : 'يُرسل النص إلى ElevenLabs عند التوليد، وقد تُحتسب تكلفة الاستخدام.';
 }
@@ -110,8 +111,8 @@ async function renderHistory() {
 
 async function generate() {
   const text = $('speech-text').value.trim();
-  const library = document.querySelector('input[name="voice-source"]:checked').value === 'library';
-  const voice = (library ? $('voice-id').value : voiceId()).trim();
+  const source = document.querySelector('input[name="voice-source"]:checked').value;
+  const voice = (source === 'library' ? $('voice-id').value : source === 'selected' ? $('selected-voice').value : voiceId()).trim();
   const key = apiKey();
   const seed = Number($('seed').value);
   if (!key) return message('speech-message', 'أدخل مفتاح ElevenLabs API.', true);

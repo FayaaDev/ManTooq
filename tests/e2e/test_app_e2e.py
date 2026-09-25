@@ -108,15 +108,19 @@ class BrowserCycleTest(unittest.TestCase):
                         download.save_as(saved)
                         self.assertEqual(saved.read_bytes(), b"ID3\x04\x00\x00\x00\x00\x00\x00")
 
+                        page.get_by_role("radio", name="اصوات مختارة").click()
+                        self.assertEqual(page.get_by_role("combobox", name="الصوت المختار").input_value(), "ناصر")
+                        page.get_by_role("textbox", name="النص العربي").fill("نص من الأصوات المختارة")
+                        page.get_by_role("button", name="ولّد الصوت").click()
                         page.get_by_role("radio", name="صوت من المكتبة").click()
                         page.get_by_role("textbox", name="معرّف الصوت").fill("library-e2e-id")
                         page.get_by_role("textbox", name="النص العربي").fill("نص من المكتبة")
                         page.get_by_role("button", name="ولّد الصوت").click()
                         for _ in range(50):
-                            if len(list((folder / ".local" / "generated_audio").glob("*.mp3"))) == 2:
+                            if len(list((folder / ".local" / "generated_audio").glob("*.mp3"))) == 3:
                                 break
                             time.sleep(0.1)
-                        self.assertEqual(len(list((folder / ".local" / "generated_audio").glob("*.mp3"))), 2)
+                        self.assertEqual(len(list((folder / ".local" / "generated_audio").glob("*.mp3"))), 3)
 
                         page.get_by_role("textbox", name="النص العربي").fill("E2E_FAIL")
                         page.get_by_role("button", name="ولّد الصوت").click()
@@ -124,17 +128,18 @@ class BrowserCycleTest(unittest.TestCase):
                         self.assertEqual(page.get_by_role("button", name="حمّل ملف MP3").count(), 1)
                         self.assertTrue(page.locator("audio").is_visible())
                         page.get_by_role("tab", name="الأصوات المحفوظة").click()
-                        page.get_by_text("تسجيل 2").wait_for()
-                        self.assertEqual(page.locator("audio").count(), 2)
+                        page.get_by_text("تسجيل 3").wait_for()
+                        self.assertEqual(page.locator("audio").count(), 3)
                         page.get_by_role("button", name="حمّل ملف MP3").first.hover()
                         page.get_by_text(f"رقم النبرة: {generated_seed}").wait_for()
                         page.reload()
                         page.get_by_role("tab", name="الأصوات المحفوظة").click()
-                        page.get_by_text("تسجيل 2").wait_for()
-                        self.assertEqual(len(list((folder / ".local" / "generated_audio").glob("*.mp3"))), 2)
+                        page.get_by_text("تسجيل 3").wait_for()
+                        self.assertEqual(len(list((folder / ".local" / "generated_audio").glob("*.mp3"))), 3)
                         self.assertEqual([json.loads(line) for line in events.read_text().splitlines()], [
                             {"action": "clone", "name": "صوت تجريبي", "filename": "sample.wav", "has_key": True},
                             {"action": "speak", "text": "مرحبًا بالعالم", "voice_id": "cloned-e2e-id", "seed": generated_seed, "has_key": True},
+                            {"action": "speak", "text": "نص من الأصوات المختارة", "voice_id": "cFUFIbKkO2iZFwS8cRnY", "seed": generated_seed, "has_key": True},
                             {"action": "speak", "text": "نص من المكتبة", "voice_id": "library-e2e-id", "seed": generated_seed, "has_key": True},
                             {"action": "speak", "text": "E2E_FAIL", "voice_id": "library-e2e-id", "seed": generated_seed, "has_key": True},
                         ])

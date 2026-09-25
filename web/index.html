@@ -44,12 +44,23 @@
           <legend>الصوت</legend>
           <label><input type="radio" name="voice-source" value="saved" checked> صوتي</label>
           <label><input type="radio" name="voice-source" value="library"> صوت من المكتبة</label>
+          <label><input type="radio" name="voice-source" value="selected"> اصوات مختارة</label>
         </fieldset>
         <p id="saved-voice-hint" class="muted">لا يوجد صوت محفوظ. استنسخ صوتك أو اختر صوتًا من المكتبة.</p>
         <div id="library-fields" hidden>
           <label for="voice-id">معرّف الصوت</label>
           <input id="voice-id" type="text" dir="ltr" autocomplete="off" spellcheck="false" placeholder="الصق معرّف الصوت Voice ID">
           <a class="field-link" href="https://elevenlabs.io/app/voice-library?required_languages=ar&amp;accent=saudi" target="_blank" rel="noopener noreferrer">اختر من مكتبة الأصوات السعودية ↗</a>
+        </div>
+        <div id="selected-fields" hidden>
+          <label for="selected-voice">الصوت المختار</label>
+          <select id="selected-voice">
+            <option value="cFUFIbKkO2iZFwS8cRnY">ناصر</option>
+            <option value="t9akNmCDhz230CEXOYmn">عبدالله</option>
+            <option value="T9KaXxyeFWyP8DFgs9bx">فارس</option>
+            <option value="ckaeRWMtCV0u0pUT3wX1">نورة</option>
+            <option value="kr4VZw8MSZMHE0y2m40n">حساوي</option>
+          </select>
         </div>
         <details class="seed-settings">
           <summary>إعدادات النبرة</summary>
