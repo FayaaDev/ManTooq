@@ -4,6 +4,7 @@ import base64
 import os
 import secrets
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
@@ -11,7 +12,7 @@ import streamlit_shadcn_ui as ui
 from dotenv import load_dotenv
 from streamlit.runtime import exists as streamlit_runtime_exists
 
-if Path(sys.path[0]).resolve() == Path(__file__).resolve().parent:
+if getattr(sys, "frozen", False) or Path(sys.path[0]).resolve() == Path(__file__).resolve().parent:
     from arabic_tts import DEFAULT_SEED, clone_voice, default_voice_id, save_generated_audio, save_seed, saved_generated_audio, saved_seeds, speak
 else:
     from app.arabic_tts import DEFAULT_SEED, clone_voice, default_voice_id, save_generated_audio, save_seed, saved_generated_audio, saved_seeds, speak
@@ -83,7 +84,7 @@ if active_tab == "توليد الصوت":
     with st.container(key="studio_sheet"):
         editor, result = st.columns([3, 2], gap="large", vertical_alignment="top")
         with editor:
-            st.subheader("نصك، بصوتك", text_alignment="right")
+            st.header("نصك، بصوتك", text_alignment="right")
             text = st.text_area("النص العربي", placeholder="اكتب النص الذي تريد سماعه…", height=240, key="speech_text")
             voice_source = ui.radio_group(
                 "الصوت",
@@ -94,25 +95,33 @@ if active_tab == "توليد الصوت":
             if voice_source == "صوتي المستنسخ":
                 voice_id = saved_voice
                 if not saved_voice:
-                    ui.alert("لا يوجد صوت محفوظ", "استنسخ صوتًا أولًا، أو اختر صوتًا من المكتبة.")
+                    ui.alert("لا يوجد صوت محفوظ", "افتح تبويب «استنساخ صوت» لإنشاء صوتك، أو اختر صوتًا من المكتبة.")
             else:
-                voice_id = st.text_input("معرّف الصوت", placeholder="معرّف الصوت من مكتبة ElevenLabs")
+                voice_id = st.text_input("معرّف الصوت", placeholder="معرّف الصوت من مكتبة ElevenLabs", help="انسخ معرّف الصوت من مكتبة ElevenLabs والصقه هنا.")
 
             with st.popover("إعدادات النبرة", icon=":material/tune:"):
-                st.number_input("البذرة", min_value=0, max_value=2**32 - 1, step=1, key="speech_seed")
+                st.number_input("البذرة", min_value=0, max_value=2**32 - 1, step=1, key="speech_seed", help="استخدم الرقم نفسه لتكرار إعداد النبرة.")
                 if ui.button("بذرة جديدة", key="generate_seed", variant="ghost"):
                     st.session_state.speech_seed = secrets.randbits(32)
                     save_seed(st.session_state.speech_seed)
                 st.selectbox("البذور المحفوظة", saved_seeds(), key="saved_seed", on_change=use_saved_seed)
+            if not api_key:
+                st.caption("أضف مفتاح API من أعلى الصفحة قبل التوليد.", text_alignment="right")
+            elif not voice_id:
+                st.caption("اختر صوتًا محفوظًا أو أدخل معرّف صوت من المكتبة.", text_alignment="right")
+            elif not text.strip():
+                st.caption("اكتب النص العربي لبدء التوليد.", text_alignment="right")
+            else:
+                st.caption("يُرسل النص إلى ElevenLabs عند التوليد، وقد تُحتسب تكلفة الاستخدام.", text_alignment="right")
             generate = ui.button("ولّد الصوت", key="generate", width="stretch")
             if generate:
-                st.session_state.pop("audio", None)
                 try:
                     with st.spinner("جارٍ توليد الصوت…"):
                         seed = int(st.session_state.speech_seed)
                         save_seed(seed)
-                        st.session_state.audio = speak(text, voice_id, api_key, seed)
-                        save_generated_audio(st.session_state.audio, seed)
+                        audio = speak(text, voice_id, api_key, seed)
+                        save_generated_audio(audio, seed)
+                        st.session_state.audio = audio
                 except ValueError as exc:
                     st.warning(str(exc))
                 except Exception:
@@ -120,7 +129,7 @@ if active_tab == "توليد الصوت":
 
         with result:
             with st.container(key="playback"):
-                st.subheader("الاستماع", text_alignment="right")
+                st.header("الاستماع", text_alignment="right")
                 if st.session_state.get("audio"):
                     st.audio(st.session_state.audio, format="audio/mp3")
                     st.download_button("حمّل ملف MP3", st.session_state.audio, "speech.mp3", "audio/mpeg", width="stretch")
@@ -131,9 +140,10 @@ elif active_tab == "استنساخ صوت":
     with st.container(key="studio_sheet"):
         clone_form, clone_help = st.columns([3, 2], gap="large", vertical_alignment="top")
         with clone_form:
-            st.subheader("استنسخ صوتك", text_alignment="right")
+            st.header("استنسخ صوتك", text_alignment="right")
             st.caption("ارفع تسجيلًا لصوت تملك حق استنساخه.", text_alignment="right")
             sample = st.file_uploader("التسجيل الصوتي", type=["wav", "mp3", "m4a"])
+            st.caption("ملفات WAV أو MP3 أو M4A، بحجم لا يتجاوز 200 ميجابايت.", text_alignment="right")
             name = ui.input("اسم الصوت", placeholder="صوتي العربي", key="clone_name")
             create = ui.button("استنسخ الصوت", key="clone", width="stretch")
             if create:
@@ -151,7 +161,7 @@ elif active_tab == "استنساخ صوت":
                 st.caption("يُحفظ الصوت على هذا الجهاز ويظهر في تبويب «توليد الصوت».", text_alignment="right")
 
 else:
-    st.subheader("الأصوات المحفوظة", text_alignment="right")
+    st.header("الأصوات المحفوظة", text_alignment="right")
     recordings = saved_generated_audio()
     if not recordings:
         st.caption("ستظهر تسجيلاتك هنا بعد التوليد.", text_alignment="right")
@@ -160,6 +170,7 @@ else:
             title, details = st.columns([4, 1], vertical_alignment="center")
             with title:
                 st.markdown(f"**تسجيل {index}**", text_alignment="right")
+                st.caption(datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y/%m/%d · %H:%M"), text_alignment="right")
             with details:
                 with ui.elements(key=f"seed_tip_{index}", width="content") as elements:
                     with elements.tooltip(f"رقم البذرة: {seed}"):
