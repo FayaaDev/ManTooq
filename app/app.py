@@ -24,6 +24,7 @@ if __name__ == "__main__" and not streamlit_runtime_exists():
 
 load_dotenv()
 st.set_page_config(page_title="منطوق", page_icon="🎙️", layout="wide", initial_sidebar_state="collapsed")
+logo_path = Path(__file__).resolve().parent / "font" / "logocircle.png"
 font = base64.b64encode((Path(__file__).resolve().parent / "font" / "thmanyahsans-Bold.ttf").read_bytes()).decode()
 st.markdown(
     f"""<style>
@@ -66,8 +67,12 @@ st.markdown(
 with st.container(key="app_header"):
     header, connection = st.columns([3, 1], gap="medium", vertical_alignment="center")
     with header:
-        st.title("منطوق", text_alignment="right")
-        st.caption("مساحة العمل الصوتي العربية", text_alignment="right")
+        title, logo = st.columns([8, 1], gap="small", vertical_alignment="center")
+        with title:
+            st.title("منطوق", text_alignment="right")
+            st.caption("مساحتك للإبداع بالمنطوق السعودي الأصيل", text_alignment="right")
+        with logo:
+            st.image(logo_path, width=56)
     with connection:
         with st.popover("مفتاح API", icon=":material/key:"):
             entered_api_key = st.text_input(
@@ -120,7 +125,7 @@ if active_tab == "توليد الصوت":
             elif not voice_id:
                 st.caption("اختر صوتًا محفوظًا أو أدخل معرّف صوت من المكتبة.", text_alignment="right")
             elif not text.strip():
-                st.caption("اكتب النص العربي لبدء التوليد.", text_alignment="right")
+                st.caption("اكتب، ولّد، اسمع", text_alignment="right")
             else:
                 st.caption("يُرسل النص إلى ElevenLabs عند التوليد، وقد تُحتسب تكلفة الاستخدام.", text_alignment="right")
             generate = ui.button("ولّد الصوت", key="generate", width="stretch")
@@ -144,14 +149,14 @@ if active_tab == "توليد الصوت":
                     st.audio(st.session_state.audio, format="audio/mp3")
                     st.download_button("حمّل ملف MP3", st.session_state.audio, "speech.mp3", "audio/mpeg", width="stretch")
                 else:
-                    st.caption("سيظهر التسجيل هنا بعد التوليد.", text_alignment="right")
+                    st.caption("شيّك هنا بعد توليد الصوت", text_alignment="right")
 
 elif active_tab == "استنساخ صوت":
     with st.container(key="studio_sheet"):
         clone_form, clone_help = st.columns([3, 2], gap="large", vertical_alignment="top")
         with clone_form:
             st.header("استنسخ صوتك", text_alignment="right")
-            st.caption("ارفع تسجيلًا لصوت تملك حق استنساخه.", text_alignment="right")
+            st.caption("أرفع مقطع لك مايتجاوز دقيقة ", text_alignment="right")
             sample = st.file_uploader("التسجيل الصوتي", type=["wav", "mp3", "m4a"])
             st.caption("ملفات WAV أو MP3 أو M4A، بحجم لا يتجاوز 200 ميجابايت.", text_alignment="right")
             name = ui.input("اسم الصوت", placeholder="صوتي العربي", key="clone_name")
@@ -177,16 +182,10 @@ else:
         st.caption("ستظهر تسجيلاتك هنا بعد التوليد.", text_alignment="right")
     for index, (path, seed) in enumerate(recordings, 1):
         with st.container(border=True):
-            title, details = st.columns([4, 1], vertical_alignment="center")
-            with title:
-                st.markdown(f"**تسجيل {index}**", text_alignment="right")
-                st.caption(datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y/%m/%d · %H:%M"), text_alignment="right")
-            with details:
-                with ui.elements(key=f"seed_tip_{index}", width="content") as elements:
-                    with elements.tooltip(f"رقم البذرة: {seed}"):
-                        elements.button("البذرة", key=f"seed_{index}", variant="ghost", size="sm")
+            st.markdown(f"**تسجيل {index}**", text_alignment="right")
+            st.caption(datetime.fromtimestamp(path.stat().st_mtime).strftime("%Y/%m/%d · %H:%M"), text_alignment="right")
             st.audio(path, format="audio/mp3")
-            st.download_button("حمّل ملف MP3", path.read_bytes(), path.name, "audio/mpeg", key=path.name)
+            st.download_button("حمّل ملف MP3", path.read_bytes(), path.name, "audio/mpeg", key=path.name, help=f"رقم البذرة: {seed}")
 
 with st.container(key="footer"):
     brand, attribution, copyright = st.columns(3, gap="large", vertical_alignment="center")

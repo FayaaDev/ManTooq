@@ -56,7 +56,7 @@ class BrowserCycleTest(unittest.TestCase):
                         for name in ("منطوق", "نصك، بصوتك", "الاستماع"):
                             heading = page.get_by_role("heading", name=name)
                             self.assertEqual(heading.evaluate("element => getComputedStyle(element).textAlign"), "right")
-                        self.assertEqual(page.get_by_text("سيظهر التسجيل هنا بعد التوليد.").evaluate("element => getComputedStyle(element).textAlign"), "right")
+                        self.assertEqual(page.get_by_text("شيّك هنا بعد توليد الصوت").evaluate("element => getComputedStyle(element).textAlign"), "right")
                         page.get_by_role("textbox", name="معرّف الصوت").fill("library-e2e-id")
                         page.get_by_role("textbox", name="النص العربي").fill("نص تجريبي")
                         page.get_by_role("button", name="ولّد الصوت").click()
@@ -114,7 +114,7 @@ class BrowserCycleTest(unittest.TestCase):
                         page.get_by_role("tab", name="الأصوات المحفوظة").click()
                         page.get_by_text("تسجيل 2").wait_for()
                         self.assertEqual(page.locator("audio").count(), 2)
-                        page.get_by_role("button", name="البذرة").first.hover()
+                        page.get_by_role("button", name="حمّل ملف MP3").first.hover()
                         page.get_by_text(f"رقم البذرة: {generated_seed}").wait_for()
                         page.reload()
                         page.get_by_role("tab", name="الأصوات المحفوظة").click()

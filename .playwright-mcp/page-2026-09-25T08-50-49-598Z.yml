@@ -50,7 +50,7 @@
                   - generic [ref=e95]: tune
                   - paragraph [ref=e99]: إعدادات النبرة
               - generic [ref=e132]: expand_less
-          - paragraph [ref=e107]: اكتب النص العربي لبدء التوليد.
+          - paragraph [ref=e107]: اكتب، ولّد، اسمع
           - button "ولّد الصوت" [ref=e116]
         - generic [ref=e120]:
           - heading "الاستماع" [level=2] [ref=e125]:
@@ -58,7 +58,7 @@
             - generic [ref=e126]:
               - link "Link to heading":
                 - /url: "#alastmae"
-          - paragraph [ref=e131]: سيظهر التسجيل هنا بعد التوليد.
+          - paragraph [ref=e131]: شيّك هنا بعد توليد الصوت
   - dialog "إعدادات النبرة" [ref=e134]:
     - generic [ref=e135]:
       - generic [ref=e137]:
