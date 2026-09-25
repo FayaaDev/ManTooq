@@ -4,7 +4,7 @@
 
 ## البدء
 
-لتثبيت تطبيق macOS دون Python أو `uv`، راجع [دليل التثبيت](MACOS.md).
+لتثبيت التطبيق دون Python أو `uv`، راجع [دليل macOS](MACOS.md) أو [دليل Windows x64](WINDOWS.md).
 
 1. ثبّت [uv](https://docs.astral.sh/uv/) ثم شغّل `uv sync` داخل هذا المجلد.
 2. انسخ `.env.example` إلى `.env` واستبدل القيمة الافتراضية بمفتاح ElevenLabs API الخاص بك. يمكنك أيضًا إدخال المفتاح في الواجهة.

@@ -9,6 +9,11 @@ use std::{
 
 use tauri::{Manager, RunEvent};
 
+#[cfg(target_os = "windows")]
+const SERVER_BINARY: &str = "mantooq-server.exe";
+#[cfg(not(target_os = "windows"))]
+const SERVER_BINARY: &str = "mantooq-server";
+
 struct Server(Mutex<Option<Child>>);
 
 fn start(app: tauri::AppHandle) -> std::io::Result<()> {
@@ -16,7 +21,8 @@ fn start(app: tauri::AppHandle) -> std::io::Result<()> {
         .path()
         .resource_dir()
         .map_err(std::io::Error::other)?
-        .join("python/mantooq-server/mantooq-server");
+        .join("python/mantooq-server")
+        .join(SERVER_BINARY);
     let data = app.path().app_data_dir().map_err(std::io::Error::other)?;
     std::fs::create_dir_all(&data)?;
     let listener = TcpListener::bind("127.0.0.1:0")?;

@@ -2,6 +2,7 @@
 
 import socket
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -14,9 +15,11 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 class DesktopBundleTest(unittest.TestCase):
     def test_bundled_server_starts_outside_repository(self):
-        binary = Path(__file__).resolve().parents[2] / "dist/mantooq-server/mantooq-server"
+        binary = Path(__file__).resolve().parents[2] / "dist/mantooq-server" / (
+            "mantooq-server.exe" if sys.platform == "win32" else "mantooq-server"
+        )
         if not binary.exists():
-            self.skipTest("Build with scripts/build-macos.sh first")
+            self.skipTest("Build with the platform packaging script first")
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))
             port = sock.getsockname()[1]

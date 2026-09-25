@@ -19,7 +19,7 @@
   "bundle": {
     "active": true,
     "targets": ["app", "dmg"],
-    "icon": ["icons/icon.png", "icons/icon.icns"],
+    "icon": ["icons/icon.png", "icons/icon.icns", "icons/icon.ico"],
     "macOS": { "signingIdentity": "-" },
     "resources": {
       "../dist/mantooq-server": "python/mantooq-server"

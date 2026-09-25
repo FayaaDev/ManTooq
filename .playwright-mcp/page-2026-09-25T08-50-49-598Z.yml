@@ -1,0 +1,78 @@
+- generic:
+  - generic [ref=e3]:
+    - banner
+    - generic [ref=e6]:
+      - generic [ref=e8]:
+        - heading "منطوق" [level=1] [ref=e15]:
+          - text: منطوق
+          - generic [ref=e16]:
+            - link "Link to heading":
+              - /url: "#mntwq"
+        - button "key مفتاح API" [ref=e22] [cursor=pointer]:
+          - generic [ref=e23]:
+            - generic "مفتاح API" [ref=e24]:
+              - generic [ref=e25]:
+                - generic [ref=e26]: key
+                - paragraph [ref=e30]: مفتاح API
+            - generic [ref=e32]: expand_more
+      - generic [ref=e41]:
+        - generic [ref=e42]: سير العمل
+        - generic "سير العمل" [ref=e43]:
+          - tablist "سير العمل" [ref=e44]:
+            - tab "توليد الصوت" [selected] [ref=e45]
+            - tab "استنساخ صوت" [ref=e46]
+            - tab "الأصوات المحفوظة" [ref=e47]
+      - generic [ref=e51]:
+        - generic [ref=e53]:
+          - heading "نصك، بصوتك" [level=2] [ref=e58]:
+            - text: نصك، بصوتك
+            - generic [ref=e59]:
+              - link "Link to heading":
+                - /url: "#nsk-bswtk"
+          - generic [ref=e61]:
+            - paragraph [ref=e65]: النص العربي
+            - textbox "النص العربي" [ref=e67]:
+              - /placeholder: اكتب النص الذي تريد سماعه…
+          - group [ref=e75]:
+            - radiogroup "الصوت" [ref=e77]:
+              - generic [ref=e78]:
+                - radio "صوتي المستنسخ" [checked] [ref=e79]
+                - radio [checked] [aria-hidden] [ref=e82]
+                - generic [ref=e83]: صوتي المستنسخ
+              - generic [ref=e84]:
+                - radio "صوت من المكتبة" [ref=e85]
+                - radio [aria-hidden] [ref=e86]
+                - generic [ref=e87]: صوت من المكتبة
+          - button "tune إعدادات النبرة" [expanded] [active] [ref=e91] [cursor=pointer]:
+            - generic [ref=e92]:
+              - generic "إعدادات النبرة" [ref=e93]:
+                - generic [ref=e94]:
+                  - generic [ref=e95]: tune
+                  - paragraph [ref=e99]: إعدادات النبرة
+              - generic [ref=e132]: expand_less
+          - paragraph [ref=e107]: اكتب النص العربي لبدء التوليد.
+          - button "ولّد الصوت" [ref=e116]
+        - generic [ref=e120]:
+          - heading "الاستماع" [level=2] [ref=e125]:
+            - text: الاستماع
+            - generic [ref=e126]:
+              - link "Link to heading":
+                - /url: "#alastmae"
+          - paragraph [ref=e131]: سيظهر التسجيل هنا بعد التوليد.
+  - dialog "إعدادات النبرة" [ref=e134]:
+    - generic [ref=e135]:
+      - generic [ref=e137]:
+        - generic [ref=e138]:
+          - paragraph [ref=e141]: البذرة
+          - button "Help for البذرة" [ref=e145] [cursor=pointer]
+        - generic [ref=e150]:
+          - spinbutton "البذرة" [ref=e151]: "2752657480"
+          - generic [ref=e152]:
+            - button "Decrement" [ref=e153] [cursor=pointer]
+            - button "Increment" [ref=e156] [cursor=pointer]
+      - button "بذرة جديدة" [ref=e167]
+      - generic [ref=e169]:
+        - paragraph [ref=e173]: البذور المحفوظة
+        - group [ref=e175]:
+          - combobox "البذور المحفوظة" [ref=e176]: "2752657480"
+          - button "Open" [ref=e177] [cursor=pointer]
