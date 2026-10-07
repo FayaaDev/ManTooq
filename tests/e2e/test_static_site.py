@@ -86,6 +86,7 @@ class StaticSiteTest(unittest.TestCase):
                     self.assertIsNone(page.evaluate("localStorage.getItem('mantooq:key')"))
                     page.locator("#key-menu summary").click()
                     page.get_by_label("مفتاح ElevenLabs").fill("visitor-key")
+                    page.locator("#key-menu summary").click()
                     self.assertIsNone(page.get_by_label("النص العربي").get_attribute("maxlength"))
                     page.get_by_label("النص العربي").fill("س" * 251)
                     self.assertEqual(len(page.get_by_label("النص العربي").input_value()), 251)
