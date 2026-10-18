@@ -147,7 +147,7 @@ async function generate() {
     if (!response.ok) {
       if (demoMode) {
         const result = await response.json().catch(() => ({}));
-        return message('speech-message', result.error || 'تعذّر توليد الصوت التجريبي.', true);
+        return message('speech-message', result.error || 'انتهت الفترة التجريبية، اضف مفتاحك من Elevenlabs', true);
       }
       throw new Error(String(response.status));
     }
