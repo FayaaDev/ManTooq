@@ -25,6 +25,7 @@ service-account*.json
 cloned_voice_id*.txt
 Mp3/
 output/
+/generated/script.md
 # Audio files (case-insensitive extensions)
 *.[mM][pP]3
 *.[wW][aA][vV]
