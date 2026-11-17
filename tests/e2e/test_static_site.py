@@ -45,8 +45,8 @@ class StaticSiteTest(unittest.TestCase):
                             route.fulfill(status=200, content_type="application/json", body='{"voice_id":"cloned-id"}')
                         else:
                             payload = request.post_data_json
-                            self.assertEqual(payload["model_id"], "eleven_v3")
-                            self.assertEqual(payload["voice_settings"]["speed"], 0.95)
+                            self.assertEqual(payload["model_id"], "eleven_v4_turbo")
+                            self.assertEqual(payload["voice_settings"], {"stability": 0.7, "similarity_boost": 0.9})
                             self.assertEqual(payload["text"], "مرحبًا بالعالم")
                             route.fulfill(status=200, content_type="audio/mpeg", body=b"ID3\x04\x00test")
 

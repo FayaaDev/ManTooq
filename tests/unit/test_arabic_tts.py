@@ -68,6 +68,8 @@ class VoiceFlowTest(unittest.TestCase):
             self.assertEqual(arabic_tts.default_voice_id(), "cloned-id")
             self.assertEqual(arabic_tts.speak("مرحبا", "library-id", "key"), b"arabic audio")
             self.assertEqual(client.return_value.text_to_speech.convert.call_args.kwargs["voice_id"], "library-id")
+            self.assertEqual(client.return_value.text_to_speech.convert.call_args.kwargs["model_id"], "eleven_v4_turbo")
+            self.assertEqual(client.return_value.text_to_speech.convert.call_args.kwargs["voice_settings"].model_dump(exclude_none=True), {"stability": 0.7, "similarity_boost": 0.9})
             self.assertEqual(client.return_value.text_to_speech.convert.call_args.kwargs["seed"], arabic_tts.DEFAULT_SEED)
 
     def test_saved_seeds_are_reusable(self):

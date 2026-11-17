@@ -22,9 +22,6 @@ DEFAULT_SEED = 2752657480
 VOICE_SETTINGS = VoiceSettings(
     stability=0.7,
     similarity_boost=0.9,
-    use_speaker_boost=True,
-    style=0.0,
-    speed=0.95,
 )
 
 
@@ -108,7 +105,7 @@ def speak(text, voice_id, api_key, seed=DEFAULT_SEED):
         ElevenLabs(api_key=api_key).text_to_speech.convert(
             text=text.strip(),
             voice_id=voice_id.strip(),
-            model_id="eleven_v3",
+            model_id="eleven_v4_turbo",
             output_format="mp3_44100_128",
             voice_settings=VOICE_SETTINGS,
             seed=seed,

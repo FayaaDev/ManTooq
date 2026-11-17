@@ -45,7 +45,7 @@ export async function onRequestPost({ request, env }) {
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${input.voice}?output_format=mp3_44100_128`, {
       method: 'POST',
       headers: { 'xi-api-key': env.DEMO_ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text, model_id: 'eleven_v3', voice_settings: { stability: 0.7, similarity_boost: 0.9, use_speaker_boost: true, style: 0, speed: 0.95 }, seed: 2752657480 }),
+      body: JSON.stringify({ text, model_id: 'eleven_v4_turbo', voice_settings: { stability: 0.7, similarity_boost: 0.9 }, seed: 2752657480 }),
     });
     if (!response.ok) throw new Error('ElevenLabs request failed');
     const audio = await response.arrayBuffer();

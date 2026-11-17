@@ -42,6 +42,8 @@ test('demo key stays server-side; cookie and IP both block repeats for 24 hours'
     calls++;
     assert.equal(options.headers['xi-api-key'], 'server-only-test-key');
     assert.equal(JSON.parse(options.body).text, 'مرحبًا');
+    assert.equal(JSON.parse(options.body).model_id, 'eleven_v4_turbo');
+    assert.deepEqual(JSON.parse(options.body).voice_settings, { stability: 0.7, similarity_boost: 0.9 });
     return new Response(new Uint8Array([73, 68, 51]), { status: 200 });
   };
   const first = await request();

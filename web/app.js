@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const DEFAULT_SEED = 2752657480;
 const STORAGE = { key: 'mantooq:key', voice: 'mantooq:voice', seeds: 'mantooq:seeds' };
-const settings = { stability: 0.7, similarity_boost: 0.9, use_speaker_boost: true, style: 0, speed: 0.95 };
+const settings = { stability: 0.7, similarity_boost: 0.9 };
 let playerUrl;
 let recordingUrls = [];
 let demoMode = !apiKey();
@@ -142,7 +142,7 @@ async function generate() {
     const response = await fetch(demoMode ? '/api/demo' : `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}?output_format=mp3_44100_128`, {
       method: 'POST',
       headers: demoMode ? { 'Content-Type': 'application/json' } : { 'xi-api-key': key, 'Content-Type': 'application/json' },
-      body: demoMode ? JSON.stringify({ text, voice }) : JSON.stringify({ text, model_id: 'eleven_v3', voice_settings: settings, seed }),
+      body: demoMode ? JSON.stringify({ text, voice }) : JSON.stringify({ text, model_id: 'eleven_v4_turbo', voice_settings: settings, seed }),
     });
     if (!response.ok) {
       if (demoMode) {
