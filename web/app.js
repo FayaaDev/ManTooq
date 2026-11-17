@@ -50,7 +50,7 @@ function renderVoice() {
   $('cloned-id').hidden = !saved;
   document.querySelector('.seed-settings').hidden = demoMode;
   $('speech-note').textContent = demoMode
-    ? 'التجربة: 250 حرفًا كحد أقصى، بصوت مختار واحد كل 24 ساعة لكل متصفح وشبكة.'
+    ? 'التجربة: 3 محاولات كل 24 ساعة لكل متصفح وشبكة، و250 حرفًا كحد أقصى لكل محاولة بصوت مختار.'
     : !apiKey()
     ? 'أضف مفتاح API من أعلى الصفحة قبل التوليد.'
     : source === 'saved' && !saved
@@ -122,6 +122,7 @@ async function generate() {
   const text = $('speech-text').value.trim();
   const source = document.querySelector('input[name="voice-source"]:checked').value;
   const voice = (source === 'library' ? $('voice-id').value : source === 'selected' ? $('selected-voice').value : voiceId()).trim();
+  const isMoteb = voice === 's8AtpE08HrPmTUNmxgfQ';
   const key = apiKey();
   const seed = Number($('seed').value);
   if (!key && !demoMode) return message('speech-message', 'أدخل مفتاح ElevenLabs API.', true);
@@ -142,7 +143,12 @@ async function generate() {
     const response = await fetch(demoMode ? '/api/demo' : `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}?output_format=mp3_44100_128`, {
       method: 'POST',
       headers: demoMode ? { 'Content-Type': 'application/json' } : { 'xi-api-key': key, 'Content-Type': 'application/json' },
-      body: demoMode ? JSON.stringify({ text, voice }) : JSON.stringify({ text, model_id: 'eleven_v4_turbo', voice_settings: settings, seed }),
+      body: demoMode ? JSON.stringify({ text, voice }) : JSON.stringify({
+        text,
+        model_id: 'eleven_v4_turbo',
+        voice_settings: isMoteb ? { stability: 0.5, similarity_boost: 0.75 } : settings,
+        seed,
+      }),
     });
     if (!response.ok) {
       if (demoMode) {

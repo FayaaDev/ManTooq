@@ -127,7 +127,7 @@ if active_tab == "توليد الصوت":
             else:
                 selected_voice = st.selectbox(
                     "الصوت المختار",
-                    [("ناصر", "cFUFIbKkO2iZFwS8cRnY"), ("عبدالله", "t9akNmCDhz230CEXOYmn"), ("فارس", "T9KaXxyeFWyP8DFgs9bx"), ("نورة", "ckaeRWMtCV0u0pUT3wX1"), ("حساوي", "kr4VZw8MSZMHE0y2m40n")],
+                    [("ناصر", "cFUFIbKkO2iZFwS8cRnY"), ("عبدالله", "t9akNmCDhz230CEXOYmn"), ("فارس", "T9KaXxyeFWyP8DFgs9bx"), ("نورة", "ckaeRWMtCV0u0pUT3wX1"), ("حساوي", "kr4VZw8MSZMHE0y2m40n"), ("متعب", "s8AtpE08HrPmTUNmxgfQ")],
                     format_func=lambda voice: voice[0],
                 )
                 voice_id = selected_voice[1]

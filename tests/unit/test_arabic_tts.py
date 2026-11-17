@@ -72,6 +72,21 @@ class VoiceFlowTest(unittest.TestCase):
             self.assertEqual(client.return_value.text_to_speech.convert.call_args.kwargs["voice_settings"].model_dump(exclude_none=True), {"stability": 0.7, "similarity_boost": 0.9})
             self.assertEqual(client.return_value.text_to_speech.convert.call_args.kwargs["seed"], arabic_tts.DEFAULT_SEED)
 
+    def test_moteb_uses_turbo_with_approved_settings_without_changing_other_voices(self):
+        with patch.object(arabic_tts, "ElevenLabs") as client:
+            client.return_value.text_to_speech.convert.return_value = [b"audio"]
+            for voice_id, model, settings in [
+                (" s8AtpE08HrPmTUNmxgfQ ", "eleven_v4_turbo", {"stability": 0.5, "similarity_boost": 0.75}),
+                ("library-id", "eleven_v4_turbo", {"stability": 0.7, "similarity_boost": 0.9}),
+            ]:
+                with self.subTest(voice_id=voice_id):
+                    self.assertEqual(arabic_tts.speak("test", voice_id, "key", 42), b"audio")
+                    payload = client.return_value.text_to_speech.convert.call_args.kwargs
+                    self.assertEqual(payload["voice_id"], voice_id.strip())
+                    self.assertEqual(payload["model_id"], model)
+                    self.assertEqual(payload["voice_settings"].model_dump(exclude_none=True), settings)
+                    self.assertEqual(payload["seed"], 42)
+
     def test_saved_seeds_are_reusable(self):
         with tempfile.TemporaryDirectory() as folder, patch.object(
             arabic_tts, "SEED_FILE", Path(folder) / ".local" / "seeds.json"

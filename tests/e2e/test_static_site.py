@@ -45,8 +45,9 @@ class StaticSiteTest(unittest.TestCase):
                             route.fulfill(status=200, content_type="application/json", body='{"voice_id":"cloned-id"}')
                         else:
                             payload = request.post_data_json
+                            moteb = "/s8AtpE08HrPmTUNmxgfQ?" in request.url
                             self.assertEqual(payload["model_id"], "eleven_v4_turbo")
-                            self.assertEqual(payload["voice_settings"], {"stability": 0.7, "similarity_boost": 0.9})
+                            self.assertEqual(payload["voice_settings"], {"stability": 0.5, "similarity_boost": 0.75} if moteb else {"stability": 0.7, "similarity_boost": 0.9})
                             self.assertEqual(payload["text"], "مرحبًا بالعالم")
                             route.fulfill(status=200, content_type="audio/mpeg", body=b"ID3\x04\x00test")
 
@@ -56,10 +57,10 @@ class StaticSiteTest(unittest.TestCase):
                         demo_calls.append(route.request)
                         self.assertNotIn("xi-api-key", route.request.headers)
                         self.assertEqual(route.request.post_data_json["voice"], "cFUFIbKkO2iZFwS8cRnY")
-                        if len(demo_calls) == 1:
+                        if len(demo_calls) <= 3:
                             route.fulfill(status=200, content_type="audio/mpeg", body=b"ID3\x04\x00demo")
                         else:
-                            route.fulfill(status=429, content_type="application/json", body='{"error":"استخدمت التجربة."}')
+                            route.fulfill(status=429, content_type="application/json", body='{"error":"استخدمت المحاولات التجريبية الثلاث. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك."}')
 
                     page.route("https://api.elevenlabs.io/**", mock_api)
                     page.route("**/api/demo", mock_demo)
@@ -77,11 +78,12 @@ class StaticSiteTest(unittest.TestCase):
                     self.assertEqual(len(page.get_by_label("النص العربي").input_value()), 250)
                     page.get_by_text("250 / 250 حرفًا").wait_for()
                     page.get_by_label("النص العربي").fill("مرحبًا")
+                    for _ in range(3):
+                        page.get_by_role("button", name="ولّد الصوت").click()
+                        page.get_by_text("صوتك جاهز للاستماع والتحميل.").wait_for()
                     page.get_by_role("button", name="ولّد الصوت").click()
-                    page.get_by_text("صوتك جاهز للاستماع والتحميل.").wait_for()
-                    page.get_by_role("button", name="ولّد الصوت").click()
-                    page.get_by_text("استخدمت التجربة.").wait_for()
-                    self.assertEqual(len(demo_calls), 2)
+                    page.get_by_text("استخدمت المحاولات التجريبية الثلاث. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.").wait_for()
+                    self.assertEqual(len(demo_calls), 4)
                     self.assertEqual(calls, [])
                     self.assertIsNone(page.evaluate("localStorage.getItem('mantooq:key')"))
                     page.locator("#key-menu summary").click()
@@ -108,6 +110,12 @@ class StaticSiteTest(unittest.TestCase):
                     page.get_by_role("button", name="ولّد الصوت").click()
                     self.assertEqual(len(calls), 3)
                     self.assertTrue(calls[2].url.endswith("/cFUFIbKkO2iZFwS8cRnY?output_format=mp3_44100_128"))
+                    page.get_by_text("صوتك جاهز للاستماع والتحميل.").wait_for()
+                    page.get_by_label("الصوت المختار").select_option("s8AtpE08HrPmTUNmxgfQ")
+                    page.get_by_role("button", name="ولّد الصوت").click()
+                    page.get_by_text("صوتك جاهز للاستماع والتحميل.").wait_for()
+                    self.assertEqual(len(calls), 4)
+                    self.assertTrue(calls[3].url.endswith("/s8AtpE08HrPmTUNmxgfQ?output_format=mp3_44100_128"))
                     with page.expect_download() as download_info:
                         page.get_by_role("link", name="حمّل ملف MP3").click()
                     self.assertEqual(download_info.value.suggested_filename, "speech.mp3")
@@ -115,7 +123,7 @@ class StaticSiteTest(unittest.TestCase):
                     self.assertEqual(page.get_by_label("مفتاح ElevenLabs").input_value(), "visitor-key")
                     page.get_by_role("tab", name="الأصوات المحفوظة").click()
                     page.get_by_text("تسجيل 3").wait_for()
-                    self.assertEqual(page.locator("#recordings audio").count(), 3)
+                    self.assertEqual(page.locator("#recordings audio").count(), 6)
                     self.assertEqual(page.evaluate("localStorage.getItem('mantooq:voice')"), "cloned-id")
                     self.assertNotIn("visitor-key", json.dumps(page.evaluate("Object.entries(localStorage).filter(([key]) => key !== 'mantooq:key')")))
                     page.locator("#key-menu summary").click()

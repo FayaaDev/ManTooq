@@ -14,13 +14,14 @@ dependencies = [
 
 [project.scripts]
 clone = "VoiceClone:main"
+moteb = "Moteb:main"
 
 [build-system]
 requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["app", "VoiceClone"]
+packages = ["app", "VoiceClone", "Moteb"]
 
 [dependency-groups]
 dev = [

@@ -101,13 +101,14 @@ def speak(text, voice_id, api_key, seed=DEFAULT_SEED):
     if type(seed) is not int or not 0 <= seed < 2**32:
         raise ValueError("يجب أن تكون قيمة seed بين 0 و4294967295.")
 
+    is_moteb = voice_id.strip() == "s8AtpE08HrPmTUNmxgfQ"
     return b"".join(
         ElevenLabs(api_key=api_key).text_to_speech.convert(
             text=text.strip(),
             voice_id=voice_id.strip(),
             model_id="eleven_v4_turbo",
             output_format="mp3_44100_128",
-            voice_settings=VOICE_SETTINGS,
+            voice_settings=VoiceSettings(stability=0.5, similarity_boost=0.75) if is_moteb else VOICE_SETTINGS,
             seed=seed,
         )
     )
