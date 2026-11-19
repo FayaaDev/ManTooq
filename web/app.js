@@ -39,10 +39,10 @@ function renderVoice() {
   const saved = voiceId();
   const source = document.querySelector('input[name="voice-source"]:checked').value;
   const text = $('speech-text');
-  if (demoMode) text.maxLength = 250;
+  if (demoMode) text.maxLength = 50;
   else text.removeAttribute('maxlength');
   $('demo-text-count').hidden = !demoMode;
-  $('demo-text-count').textContent = `${text.value.length} / 250 حرفًا`;
+  $('demo-text-count').textContent = `${text.value.length} / 50 حرفًا`;
   $('library-fields').hidden = source !== 'library';
   $('selected-fields').hidden = source !== 'selected';
   $('saved-voice-hint').hidden = source !== 'saved' || !!saved;
@@ -50,7 +50,7 @@ function renderVoice() {
   $('cloned-id').hidden = !saved;
   document.querySelector('.seed-settings').hidden = demoMode;
   $('speech-note').textContent = demoMode
-    ? 'التجربة: 3 محاولات كل 24 ساعة لكل متصفح وشبكة، و250 حرفًا كحد أقصى لكل محاولة بصوت مختار.'
+    ? 'التجربة: محاولة واحدة كل 24 ساعة لكل متصفح وشبكة، و50 حرفًا كحد أقصى بصوت مختار.'
     : !apiKey()
     ? 'أضف مفتاح API من أعلى الصفحة قبل التوليد.'
     : source === 'saved' && !saved
@@ -127,8 +127,8 @@ async function generate() {
   const seed = Number($('seed').value);
   if (!key && !demoMode) return message('speech-message', 'أدخل مفتاح ElevenLabs API.', true);
   if (!text) return message('speech-message', 'أدخل النص المراد تحويله إلى صوت.', true);
-  if (demoMode && (source !== 'selected' || text.length > 250)) {
-    return message('speech-message', 'اختر صوتًا من الأصوات المختارة واكتب نصًا لا يتجاوز 250 حرفًا.', true);
+  if (demoMode && (source !== 'selected' || text.length > 50)) {
+    return message('speech-message', 'اختر صوتًا من الأصوات المختارة واكتب نصًا لا يتجاوز 50 حرفًا.', true);
   }
   if (!voice) return message('speech-message', 'استنسخ صوتًا أو أدخل معرّف صوت من المكتبة.', true);
   if (!demoMode && (!$('seed').value || !Number.isInteger(seed) || seed < 0 || seed > 4294967295)) {
@@ -239,7 +239,7 @@ for (const tab of tabs) {
 
 $('year').textContent = new Date().getFullYear();
 $('speech-text').addEventListener('input', () => {
-  if (demoMode) $('demo-text-count').textContent = `${$('speech-text').value.length} / 250 حرفًا`;
+  if (demoMode) $('demo-text-count').textContent = `${$('speech-text').value.length} / 50 حرفًا`;
 });
 $('api-key').value = apiKey();
 $('key-dot').classList.toggle('active', !!apiKey());

@@ -35,7 +35,7 @@ function setup() {
   return { request, uses };
 }
 
-test('demo key stays server-side; cookie and IP allow three successes then block', async () => {
+test('demo key stays server-side; cookie and IP allow one success then block', async () => {
   const { request } = setup();
   let calls = 0;
   globalThis.fetch = async (_url, options) => {
@@ -50,18 +50,13 @@ test('demo key stays server-side; cookie and IP allow three successes then block
   assert.equal(first.status, 200);
   assert.equal(first.headers.get('Cache-Control'), 'no-store');
   assert.equal(first.headers.get('Content-Type'), 'audio/mpeg');
-  let cookie = first.headers.get('Set-Cookie');
+  const cookie = first.headers.get('Set-Cookie');
   assert.match(cookie, /HttpOnly; Secure; SameSite=Lax/);
-  for (let attempt = 1; attempt < 3; attempt++) {
-    const response = await request('192.0.2.1', cookie.split(';')[0]);
-    assert.equal(response.status, 200);
-    cookie = response.headers.get('Set-Cookie');
-  }
   const denied = await request('192.0.2.2', cookie.split(';')[0]);
   assert.equal(denied.status, 429);
-  assert.match((await denied.json()).error, /المحاولات التجريبية الثلاث/);
+  assert.match((await denied.json()).error, /محاولتك التجريبية/);
   assert.equal((await request()).status, 429);
-  assert.equal(calls, 3);
+  assert.equal(calls, 1);
   assert.equal((await request('192.0.2.2')).status, 200);
 });
 
@@ -83,12 +78,20 @@ test('rejects invalid inputs before reserving; failed provider call releases cla
   const { request, uses } = setup();
   globalThis.fetch = async () => new Response('failure', { status: 500 });
   assert.equal((await request('192.0.2.3', '', { text: 'x', voice: 'arbitrary-voice' })).status, 400);
-  assert.equal((await request('192.0.2.3', '', { text: 'x'.repeat(251), voice: 'cFUFIbKkO2iZFwS8cRnY' })).status, 400);
+  assert.equal((await request('192.0.2.3', '', { text: 'x'.repeat(51), voice: 'cFUFIbKkO2iZFwS8cRnY' })).status, 400);
   assert.equal(uses.size, 0);
   assert.equal((await request()).status, 502);
   assert.equal(uses.size, 0);
   globalThis.fetch = async () => new Response(new Uint8Array([1]));
   assert.equal((await request()).status, 200);
+});
+
+test('accepts 50 characters and rejects 51', async () => {
+  const { request } = setup();
+  globalThis.fetch = async () => new Response(new Uint8Array([1]));
+  const voice = 'cFUFIbKkO2iZFwS8cRnY';
+  assert.equal((await request('192.0.2.4', '', { text: 'x'.repeat(51), voice })).status, 400);
+  assert.equal((await request('192.0.2.4', '', { text: 'x'.repeat(50), voice })).status, 200);
 });
 
 test('logs demo outcomes without text, IP, cookie, or API key', async () => {
@@ -102,14 +105,10 @@ test('logs demo outcomes without text, IP, cookie, or API key', async () => {
     assert.equal((await request()).status, 502);
     globalThis.fetch = async () => new Response(new Uint8Array([1]));
     assert.equal((await request()).status, 200);
-    assert.equal((await request()).status, 200);
-    assert.equal((await request()).status, 200);
     assert.equal((await request()).status, 429);
     assert.deepEqual(logs, [
       { event: 'demo', outcome: 'denied', reason: 'invalid_input', status: 400 },
       { event: 'demo', outcome: 'error', reason: 'generation_failed', status: 502 },
-      { event: 'demo', outcome: 'success', status: 200 },
-      { event: 'demo', outcome: 'success', status: 200 },
       { event: 'demo', outcome: 'success', status: 200 },
       { event: 'demo', outcome: 'denied', reason: 'ip_limit', status: 429 },
     ]);
@@ -117,42 +116,34 @@ test('logs demo outcomes without text, IP, cookie, or API key', async () => {
   } finally { console.log = originalLog; }
 });
 
-test('a failed third attempt releases only its own slot', async () => {
+test('a failed attempt releases its slot', async () => {
   const { request, uses } = setup();
-  globalThis.fetch = async () => new Response(new Uint8Array([1]));
-  assert.equal((await request()).status, 200);
-  assert.equal((await request()).status, 200);
   globalThis.fetch = async () => new Response('failure', { status: 500 });
   assert.equal((await request()).status, 502);
-  assert.equal(uses.size, 2);
+  assert.equal(uses.size, 0);
   globalThis.fetch = async () => new Response(new Uint8Array([1]));
   assert.equal((await request()).status, 200);
   assert.equal((await request()).status, 429);
 });
 
-test('legacy one-use cookies still leave two attempts', async () => {
+test('legacy one-use cookies are blocked', async () => {
   const { request } = setup();
   globalThis.fetch = async () => new Response(new Uint8Array([1]));
   const first = await request();
   const stamp = first.headers.get('Set-Cookie').split('=')[1].split('.')[0];
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode('test-signing-secret'), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const signed = [...new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`cookie:${stamp}`)))].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-  let cookie = `mantooq_demo=${stamp}.${signed}`;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const response = await request('192.0.2.1', cookie);
-    assert.equal(response.status, 200);
-    cookie = response.headers.get('Set-Cookie').split(';')[0];
-  }
+  const cookie = `mantooq_demo=${stamp}.${signed}`;
   assert.equal((await request('192.0.2.2', cookie)).status, 429);
 });
 
-test('simultaneous requests from one IP make at most three upstream calls', async () => {
+test('simultaneous requests from one IP make at most one upstream call', async () => {
   const { request } = setup();
   let calls = 0;
   globalThis.fetch = async () => { calls++; return new Response(new Uint8Array([1])); };
   const results = await Promise.all([request(), request(), request(), request(), request()]);
-  assert.deepEqual(results.map((result) => result.status).sort(), [200, 200, 200, 429, 429]);
-  assert.equal(calls, 3);
+  assert.deepEqual(results.map((result) => result.status).sort(), [200, 429, 429, 429, 429]);
+  assert.equal(calls, 1);
 });
 
 test('cookie and IP allowance expire after 24 hours', async () => {
@@ -161,12 +152,9 @@ test('cookie and IP allowance expire after 24 hours', async () => {
   globalThis.fetch = async () => new Response(new Uint8Array([1]));
   try {
     Date.now = () => 1_700_000_000_000;
-    let cookie = '';
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const response = await request('192.0.2.1', cookie);
-      assert.equal(response.status, 200);
-      cookie = response.headers.get('Set-Cookie').split(';')[0];
-    }
+    const response = await request('192.0.2.1');
+    assert.equal(response.status, 200);
+    const cookie = response.headers.get('Set-Cookie').split(';')[0];
     assert.equal((await request('192.0.2.1', cookie)).status, 429);
     Date.now = () => 1_700_086_400_000;
     assert.equal((await request('192.0.2.1', cookie)).status, 200);

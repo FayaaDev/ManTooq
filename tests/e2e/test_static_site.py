@@ -60,7 +60,7 @@ class StaticSiteTest(unittest.TestCase):
                         if len(demo_calls) <= 3:
                             route.fulfill(status=200, content_type="audio/mpeg", body=b"ID3\x04\x00demo")
                         else:
-                            route.fulfill(status=429, content_type="application/json", body='{"error":"استخدمت المحاولات التجريبية الثلاث. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك."}')
+                            route.fulfill(status=429, content_type="application/json", body='{"error":"استخدمت محاولتك التجريبية. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك."}')
 
                     page.route("https://api.elevenlabs.io/**", mock_api)
                     page.route("**/api/demo", mock_demo)
@@ -69,20 +69,20 @@ class StaticSiteTest(unittest.TestCase):
                     self.assertEqual(demo_calls, [])
                     self.assertEqual(calls, [])
                     self.assertTrue(page.get_by_role("radio", name="اصوات مختارة").is_checked())
-                    self.assertEqual(page.get_by_label("النص العربي").get_attribute("maxlength"), "250")
+                    self.assertEqual(page.get_by_label("النص العربي").get_attribute("maxlength"), "50")
                     page.get_by_role("button", name="ولّد الصوت").click()
                     page.get_by_text("أدخل النص المراد تحويله إلى صوت.").wait_for()
                     self.assertEqual(demo_calls, [])
-                    page.get_by_label("النص العربي").fill("س" * 250)
+                    page.get_by_label("النص العربي").fill("س" * 50)
                     page.get_by_label("النص العربي").press("a")
-                    self.assertEqual(len(page.get_by_label("النص العربي").input_value()), 250)
-                    page.get_by_text("250 / 250 حرفًا").wait_for()
+                    self.assertEqual(len(page.get_by_label("النص العربي").input_value()), 50)
+                    page.get_by_text("50 / 50 حرفًا").wait_for()
                     page.get_by_label("النص العربي").fill("مرحبًا")
                     for _ in range(3):
                         page.get_by_role("button", name="ولّد الصوت").click()
                         page.get_by_text("صوتك جاهز للاستماع والتحميل.").wait_for()
                     page.get_by_role("button", name="ولّد الصوت").click()
-                    page.get_by_text("استخدمت المحاولات التجريبية الثلاث. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.").wait_for()
+                    page.get_by_text("استخدمت محاولتك التجريبية. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.").wait_for()
                     self.assertEqual(len(demo_calls), 4)
                     self.assertEqual(calls, [])
                     self.assertIsNone(page.evaluate("localStorage.getItem('mantooq:key')"))
@@ -131,7 +131,7 @@ class StaticSiteTest(unittest.TestCase):
                     self.assertIsNone(page.evaluate("localStorage.getItem('mantooq:key')"))
                     page.reload()
                     self.assertEqual(page.get_by_label("مفتاح ElevenLabs").input_value(), "")
-                    self.assertEqual(page.get_by_label("النص العربي").get_attribute("maxlength"), "250")
+                    self.assertEqual(page.get_by_label("النص العربي").get_attribute("maxlength"), "50")
                     self.assertTrue(page.get_by_role("radio", name="اصوات مختارة").is_checked())
                 finally:
                     browser.close()

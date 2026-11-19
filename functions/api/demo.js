@@ -23,8 +23,8 @@ export async function onRequestPost({ request, env }) {
   const validCookie = cookie && Number(cookie[1]) <= now && Number(cookie[1]) + DAY > now
     && cookie[3] === await signature(env.DEMO_SECRET, `cookie:${cookie[1]}${cookie[2] ? `:${cookie[2]}` : ''}`);
   const cookieUses = validCookie ? Number(cookie[2] || 1) : 0;
-  if (cookieUses >= 3) {
-    return error(429, 'استخدمت المحاولات التجريبية الثلاث. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.', 'cookie_limit');
+  if (cookieUses >= 1) {
+    return error(429, 'استخدمت محاولتك التجريبية. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.', 'cookie_limit');
   }
 
   if (Number(request.headers.get('Content-Length')) > 4096) return error(400, 'النص طويل جدًا.', 'invalid_input');
@@ -35,23 +35,14 @@ export async function onRequestPost({ request, env }) {
     input = JSON.parse(body);
   } catch { return error(400, 'طلب غير صالح.', 'invalid_input'); }
   const text = typeof input?.text === 'string' ? input.text.trim() : '';
-  if (!text || text.length > 250 || !VOICES.has(input.voice)) return error(400, 'أدخل نصًا لا يتجاوز 250 حرفًا واختر صوتًا متاحًا.', 'invalid_input');
+  if (!text || text.length > 50 || !VOICES.has(input.voice)) return error(400, 'أدخل نصًا لا يتجاوز 50 حرفًا واختر صوتًا متاحًا.', 'invalid_input');
 
   const ipHash = await signature(env.DEMO_SECRET, `ip:${ip}`);
   const claim = crypto.randomUUID();
-  let reservedHash;
-  // Separate slots preserve atomic reservations and existing usage without a schema migration.
-  for (let slot = 0; slot < 3; slot++) {
-    const slotHash = slot === 0 ? ipHash : `${ipHash}:${slot}`;
-    const reservation = await env.DEMO_DB.prepare(
-      'INSERT INTO demo_uses (ip_hash, expires, claim) VALUES (?, ?, ?) ON CONFLICT(ip_hash) DO UPDATE SET expires = excluded.expires, claim = excluded.claim WHERE demo_uses.expires <= ?'
-    ).bind(slotHash, now + DAY, claim, now).run();
-    if (reservation.meta.changes === 1) {
-      reservedHash = slotHash;
-      break;
-    }
-  }
-  if (!reservedHash) return error(429, 'استخدمت المحاولات التجريبية الثلاث من هذه الشبكة. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.', 'ip_limit');
+  const reservation = await env.DEMO_DB.prepare(
+    'INSERT INTO demo_uses (ip_hash, expires, claim) VALUES (?, ?, ?) ON CONFLICT(ip_hash) DO UPDATE SET expires = excluded.expires, claim = excluded.claim WHERE demo_uses.expires <= ?'
+  ).bind(ipHash, now + DAY, claim, now).run();
+  if (reservation.meta.changes !== 1) return error(429, 'استخدمت المحاولة التجريبية من هذه الشبكة. جرّب مجددًا بعد 24 ساعة أو أضف مفتاحك.', 'ip_limit');
 
   try {
     const isMoteb = input.voice === 's8AtpE08HrPmTUNmxgfQ';
@@ -78,7 +69,7 @@ export async function onRequestPost({ request, env }) {
       'Set-Cookie': `mantooq_demo=${stamp}.${count}.${signedCookie}; Max-Age=${Number(stamp) + DAY - now}; Path=/api/demo; HttpOnly; Secure; SameSite=Lax`,
     } });
   } catch {
-    await env.DEMO_DB.prepare('DELETE FROM demo_uses WHERE ip_hash = ? AND claim = ?').bind(reservedHash, claim).run();
+    await env.DEMO_DB.prepare('DELETE FROM demo_uses WHERE ip_hash = ? AND claim = ?').bind(ipHash, claim).run();
     return error(502, 'تعذّر توليد الصوت التجريبي. حاول مجددًا لاحقًا.', 'generation_failed');
   }
 }
