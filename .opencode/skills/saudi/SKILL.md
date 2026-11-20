@@ -1,6 +1,6 @@
 ---
 name: saudi
-description: Rewrite Markdown or packed transcripts into natural spoken Saudi Arabic and save speech-only text ready for this project's uv run clone. Use for /saudi, Saudi dialect rewrites, or preparing a Markdown narration script for voice cloning.
+description: Rewrite Markdown or packed transcripts into natural spoken Saudi Arabic and save speech-only text in this project's Moteb directory. Use for /saudi, Saudi dialect rewrites, or preparing a Markdown narration script for voice cloning.
 ---
 
 # Saudi narration script
@@ -12,8 +12,8 @@ Turn the supplied Markdown into a natural Saudi voiceover, not a literal transla
 - Find the project root containing `pyproject.toml` and `VoiceClone/`.
 - Read the file named or attached by the user. Resolve paths from the working directory, then the project root; ask if the source is ambiguous.
 - With no source specified, use `<project-root>/VoiceClone/takes_packed.md`.
-- Save the finished script to `<project-root>/VoiceClone/takes_packed.md`, which `uv run clone` reads. Replace it in place when it is also the source. Preserve any other source file.
-- Honor an explicit output destination, but explain that `uv run clone` still reads `VoiceClone/takes_packed.md`; do not change the CLI.
+- Save the finished script to `<project-root>/Moteb/takes_packed.md`. Create `Moteb/` if needed. Preserve the source unless it is also the output destination.
+- Honor an explicit output destination. Explain that `uv run clone` still reads `VoiceClone/takes_packed.md`, not the new default output; do not change the CLI.
 
 ## Rewrite
 
